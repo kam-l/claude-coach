@@ -17,7 +17,7 @@
 ## Install
 
 ```bash
-claude plugin marketplace add kam-l/claude-plugins
+claude plugin marketplace add kam-l/claude-coach
 claude plugin install claude-coach
 ```
 
