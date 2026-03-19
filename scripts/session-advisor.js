@@ -184,6 +184,15 @@ function runWorker(sessionId, cwd) {
       return; // no transcript yet — exit gracefully
     }
 
+    // Idle check: skip if transcript hasn't changed since last advice
+    try {
+      const transcriptMtime = fs.statSync(jsonlPath).mtimeMs;
+      const cache = readCache(sessionId);
+      if (cache && cache.timestamp && transcriptMtime < cache.timestamp) {
+        return; // transcript unchanged since last cycle — no wasted Sonnet call
+      }
+    } catch {}
+
     // Read JSONL (last 64KB)
     const transcript = readTranscript(jsonlPath);
     if (!transcript) return;

@@ -9,7 +9,7 @@
     {
       "name": "claude-coach",
       "description": "Session-aware coaching for Claude Code — curated tips and live contextual advice",
-      "source": ".",
+      "source": "./",
       "category": "productivity"
     }
   ]
