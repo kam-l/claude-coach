@@ -1,0 +1,247 @@
+#!/usr/bin/env node
+/**
+ * Mines the local Claude Code setup and uses Sonnet to produce
+ * a compact coaching reference for the session advisor.
+ *
+ * Output: ~/.claude/.coach/setup-context.txt
+ * Run at: install/refresh time (not every advisor cycle)
+ *
+ * Cost: one `claude -p --model sonnet` call (~$0.05-0.10)
+ */
+
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+const { spawnSync } = require("child_process");
+
+const home = os.homedir();
+const claudeHome = path.join(home, ".claude");
+const dest = path.join(claudeHome, ".coach", "setup-context.txt");
+
+// --- Helpers ---
+
+function safeJSON(filePath) {
+  try { return JSON.parse(fs.readFileSync(filePath, "utf-8")); } catch { return null; }
+}
+
+function walkFiles(dir, matchFn) {
+  const found = [];
+  function walk(d) {
+    try {
+      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+        const full = path.join(d, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.isFile() && matchFn(entry.name)) found.push(full);
+      }
+    } catch {}
+  }
+  try { if (fs.existsSync(dir)) walk(dir); } catch {}
+  return found;
+}
+
+function extractFrontmatter(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8").replace(/\r\n/g, "\n");
+    const match = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!match) {
+      return { description: content.split("\n")[0].replace(/^#\s*/, "") };
+    }
+    const fm = {};
+    let currentKey = null;
+    let multiLine = false;
+    for (const line of match[1].split("\n")) {
+      if (currentKey && multiLine) {
+        if (/^\s/.test(line) || /^["']/.test(line.trim())) {
+          fm[currentKey] += " " + line.trim().replace(/["']$/g, "");
+          if (/["']$/.test(line.trim())) { currentKey = null; multiLine = false; }
+          continue;
+        }
+        currentKey = null; multiLine = false;
+      }
+      const sep = line.indexOf(":");
+      if (sep > 0) {
+        const key = line.slice(0, sep).trim();
+        let val = line.slice(sep + 1).trim();
+        if (/^["']/.test(val) && /["']$/.test(val)) {
+          fm[key] = val.slice(1, -1);
+        } else if (/^["']/.test(val)) {
+          fm[key] = val.slice(1);
+          currentKey = key; multiLine = true;
+        } else {
+          fm[key] = val;
+        }
+      }
+    }
+    return fm;
+  } catch { return {}; }
+}
+
+function resolveClaudePath() {
+  const cmd = process.platform === "win32" ? "where" : "which";
+  try {
+    const result = spawnSync(cmd, ["claude"], {
+      encoding: "utf-8", timeout: 5000, windowsHide: true,
+    });
+    const firstLine = (result.stdout || "").split("\n")[0].trim();
+    if (firstLine) return firstLine;
+  } catch {}
+  return "claude";
+}
+
+// --- Collect raw data ---
+
+// Commands (global — all user-invocable)
+const commands = [];
+for (const file of walkFiles(path.join(claudeHome, "commands"), n => n.endsWith(".md"))) {
+  const name = path.basename(file, ".md");
+  const fm = extractFrontmatter(file);
+  commands.push({ name: `/${name}`, description: fm.description || "" });
+}
+
+// Skills (global, deduplicated, user-invocable only)
+const seen = new Set();
+const skills = [];
+for (const file of walkFiles(path.join(claudeHome, "skills"), n => n === "SKILL.md")) {
+  const name = path.basename(path.dirname(file));
+  if (seen.has(name)) continue;
+  seen.add(name);
+  const fm = extractFrontmatter(file);
+  if (fm["user-invocable"] === "false") continue;
+  skills.push({ name, description: fm.description || "" });
+}
+
+// Hooks (from settings)
+const hooks = [];
+const seenHooks = new Set();
+for (const sp of [path.join(claudeHome, "settings.json"), path.join(claudeHome, "settings.local.json")]) {
+  const settings = safeJSON(sp);
+  if (!settings || !settings.hooks) continue;
+  for (const [event, handlers] of Object.entries(settings.hooks)) {
+    if (!Array.isArray(handlers)) continue;
+    for (const h of handlers) {
+      const key = `${event}${h.matcher ? " → " + h.matcher : ""}`;
+      if (seenHooks.has(key)) continue;
+      seenHooks.add(key);
+      hooks.push(key);
+    }
+  }
+}
+
+// Friction / insights (recent facets)
+const friction = [];
+const facetsDir = path.join(claudeHome, "usage-data", "facets");
+try {
+  if (fs.existsSync(facetsDir)) {
+    const files = fs.readdirSync(facetsDir)
+      .filter(f => f.endsWith(".json"))
+      .map(f => ({ name: f, mtime: fs.statSync(path.join(facetsDir, f)).mtimeMs }))
+      .sort((a, b) => b.mtime - a.mtime)
+      .slice(0, 5);
+    for (const { name } of files) {
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(facetsDir, name), "utf-8"));
+        if (data.underlying_goal || data.friction_detail) {
+          friction.push({
+            goal: data.underlying_goal || "",
+            friction: data.friction_detail || "",
+            outcome: data.outcome || "",
+          });
+        }
+      } catch {}
+    }
+  }
+} catch {}
+
+// Static tips
+const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..");
+let tips = [];
+try {
+  const db = safeJSON(path.join(pluginRoot, "tips.json"))
+    || safeJSON(path.join(claudeHome, ".coach", "tips.json"));
+  if (db && db.categories) {
+    tips = Object.values(db.categories).flat().map(t => t.replace(/^💡\s*/, ""));
+  }
+} catch {}
+
+// --- Short-circuit if nothing to mine ---
+
+if (commands.length === 0 && skills.length === 0 && friction.length === 0 && tips.length === 0) {
+  console.log("Nothing to mine yet — no commands, skills, friction, or tips found.");
+  process.exit(0);
+}
+
+// --- Build prompt for Sonnet (tips excluded — appended verbatim) ---
+
+const rawData = JSON.stringify({ commands, skills, hooks, friction });
+
+const prompt = `You are preparing a coaching reference for a DIFFERENT Sonnet instance that will analyze Claude Code session transcripts and give the human operator real-time tips.
+
+Below is the raw data about this user's Claude Code setup. Produce a compact coaching reference (under 500 words) that the session advisor can use to give SPECIFIC, tool-aware tips.
+
+## Raw setup data
+${rawData}
+
+## Output requirements
+Write plain text (no JSON, no markdown fences). Structure as:
+
+1. **Tools available** — group related commands/skills, note what each does in ≤10 words. The advisor needs to know WHEN to recommend each tool.
+2. **Friction patterns** — what has gone wrong before. The advisor should watch for these recurring patterns.
+
+Optimize for token efficiency: no filler, no repetition, no explanations of what a coaching reference is. Every word must help the advisor give better tips.`;
+
+// --- Call Sonnet ---
+
+const claudePath = resolveClaudePath();
+console.log("Mining setup context via Sonnet...");
+
+const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1"], {
+  input: prompt,
+  timeout: 120000,
+  encoding: "utf-8",
+  windowsHide: true,
+});
+
+const output = (result.stdout || "").trim();
+
+if (result.error || result.status !== 0 || !output) {
+  // Fallback: write raw compact data without Sonnet summarization
+  console.warn(`Sonnet call failed${result.stderr ? ": " + (result.stderr).slice(0, 200) : ""}, writing raw fallback`);
+  const fallback = [];
+  if (commands.length > 0) {
+    fallback.push("Commands:");
+    for (const c of commands) fallback.push(`  ${c.name} — ${(c.description || "").slice(0, 60)}`);
+  }
+  if (skills.length > 0) {
+    fallback.push("Skills:");
+    for (const s of skills) fallback.push(`  ${s.name} — ${(s.description || "").slice(0, 60)}`);
+  }
+  if (hooks.length > 0) fallback.push(`Hooks: ${hooks.join(", ")}`);
+  if (tips.length > 0) {
+    fallback.push("Tips:");
+    for (const t of tips) fallback.push(`  ${t}`);
+  }
+  try {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, fallback.join("\n"));
+    console.log(`Fallback setup context written → ${dest}`);
+  } catch (e) {
+    console.warn(`mine-setup: failed (${e.message})`);
+  }
+  process.exit(0);
+}
+
+// Append tips verbatim (not sent through Sonnet — preserves exact wording)
+const tipsBlock = tips.length > 0
+  ? "\n\n---\n\nTIP LIBRARY\n\nSurface these verbatim when session matches:\n" + tips.map(t => t).join("\n")
+  : "";
+
+try {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  const final = output + tipsBlock;
+  fs.writeFileSync(dest, final);
+  const tokens = Math.ceil(final.length / 4);
+  console.log(`Setup context mined (~${tokens} tokens) → ${dest}`);
+} catch (e) {
+  console.warn(`mine-setup: failed (${e.message})`);
+  process.exit(0); // fail-open
+}

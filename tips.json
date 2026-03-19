@@ -1,0 +1,86 @@
+{
+  "version": "3.0.0",
+  "categories": {
+    "workflow": [
+      "💡 Start complex tasks in plan mode before writing any code.",
+      "💡 Use `/rewind` (`Esc Esc`) to undo off-track runs instead of correcting in-context.",
+      "💡 Commit at least once per hour; stale work is lost work.",
+      "💡 After two failed corrections, `/clear` and write a better prompt.",
+      "💡 `/compact` Focus on X — preserves only relevant context during compaction.",
+      "💡 `/btw` for quick questions — answer never enters conversation history.",
+      "💡 Start a fresh session per task — long sessions degrade quality measurably.",
+      "💡 Break tasks into '30 min of human coding' chunks max.",
+      "💡 Describe symptoms, not solutions, for bug fixes.",
+      "💡 `Ctrl+G` in Plan Mode opens the plan in your editor before Claude codes.",
+      "💡 Fan out migrations: generate task list, loop `claude -p` 'migrate $file' in bash."
+    ],
+    "context": [
+      "💡 Keep each `CLAUDE.md` under 200 lines; split overflow into `.claude/rules/` files.",
+      "💡 Run `/compact` manually at ~50% context — never wait for auto-compaction.",
+      "💡 Context rot starts at 50-60% of the nominal maximum, not at the hard limit.",
+      "💡 `CLAUDE.md` survives `/compact` — instructions given only in chat do not.",
+      "💡 Use @path imports for persistent context that survives `/clear`.",
+      "💡 ASCII architecture diagrams in context improve spatial reasoning over prose.",
+      "💡 Every line in `CLAUDE.md` must earn its place: would the agent fail without it?",
+      "💡 todo.md / plan.md survive `/compact` — use as attention anchors in long sessions.",
+      "💡 `.claudeignore` excludes build artifacts; cuts irrelevant context from reads.",
+      "💡 MCP servers load tool definitions upfront — fewer tools = lower baseline token cost.",
+      "💡 Path-scoped rules in `.claude/rules/` load only when matching files are opened."
+    ],
+    "agents": [
+      "💡 Pass file paths to agents, not content — they read files themselves.",
+      "💡 Subagents run in isolated context — delegate exploration to keep main ctx clean.",
+      "💡 Feature-specific agents with scoped skills beat general-purpose roles.",
+      "💡 Subagents cannot spawn subagents — chain them from the main conversation.",
+      "💡 Set `memory: project` in agent frontmatter for cross-session knowledge.",
+      "💡 Use `isolation: worktree` to give a subagent an isolated git copy of the repo.",
+      "💡 Don't spawn a subagent for grep within 2-3 known files — direct Read is faster.",
+      "💡 Supervise closely: auth, payment, security, data mutations (1.5-2x more AI bugs).",
+      "💡 Agents self-report 73% success at 35% actual — always verify with tools.",
+      "💡 Different agent reviews than writes — self-review degrades quality.",
+      "💡 3 agent failures → stop and escalate. Hard caps prevent infinite loops.",
+      "💡 Fan-out agents need non-overlapping scopes or they duplicate work.",
+      "💡 Gate each pipeline step — errors propagate without verification gates.",
+      "💡 Same agent wrote tests + code? Separate them — that's why tests lie.",
+      "💡 Adversarial pattern: defender ‖ attacker → judge for design decisions.",
+      "💡 Restrict agent tools to scope: Read-only for research, Write for code."
+    ],
+    "hooks": [
+      "💡 `exit 2` from a hook feeds stderr back to Claude as context — use for corrections.",
+      "💡 PreToolUse can modify tool input (e.g., sanitize a command) before execution.",
+      "💡 `statusMessage` field shows custom spinner text while a hook runs.",
+      "💡 `spinnerTipsOverride` in `settings.json` replaces default tips with your own.",
+      "💡 `async: true` on a hook runs it in background without blocking the session.",
+      "💡 `once: true` (skills only) runs a hook once per session then removes it.",
+      "💡 Keep sync hooks under 1 second; anything longer should be async.",
+      "💡 PostToolUse on `Write|Edit` can auto-run code formatter — more reliable than `CLAUDE.md`.",
+      "💡 Stop hook can block Claude from completing until tests pass."
+    ],
+    "quality": [
+      "💡 Share screenshots of visual bugs — Claude groks images faster than prose.",
+      "💡 Tests, screenshots, or expected outputs are the single highest-leverage addition.",
+      "💡 Use 'ultrathink' for hard problems — surfaces chain-of-thought reasoning.",
+      "💡 Use a second session as reviewer — fresh context catches bias in code just written.",
+      "💡 Challenge work: ask Claude to prove the solution works with tests.",
+      "💡 Reference specific files + patterns: 'Follow Widget.cs as the template.'",
+      "💡 Ask Claude to write tests first — exposes gaps before implementation.",
+      "💡 Explain-back: ask Claude to walk through its own code step-by-step.",
+      "💡 Vague prompts are valid for exploration; precise prompts are for execution.",
+      "💡 Review specs, not code — human leverage is defining WHAT, not HOW.",
+      "💡 Examples teach agents format better than rules — show, don't prescribe.",
+      "💡 Start CLAUDE.md empty; add rules only after observed agent failures.",
+      "💡 One noisy CLAUDE.md line tanks accuracy — 'just in case' = poison."
+    ],
+    "performance": [
+      "💡 Heavy reasoning ('ultrathink') is expensive — reserve for architecture decisions.",
+      "💡 Use `/model` to downgrade for simple mechanical tasks — save tokens.",
+      "💡 50k-token overhead per `--print` call; prefer SDK for tight loops.",
+      "💡 Parallel worktrees + agents cut wall-clock time on multi-file refactors.",
+      "💡 Organize skills in subfolders — flat dirs cause context bloat.",
+      "💡 `effortLevel`: low in `settings.json` reduces token cost for routine tasks.",
+      "💡 autoUpdatesChannel: stable skips buggy releases (one week lag).",
+      "💡 Git worktrees enable parallel branch work without context confusion.",
+      "💡 Avoid MCP servers that mirror entire APIs — prefer few high-level tools."
+    ]
+  }
+}

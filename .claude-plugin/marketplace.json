@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-coach",
+  "description": "Session-aware coaching for Claude Code — curated tips and live contextual advice.",
+  "owner": {
+    "name": "kam-l"
+  },
+  "plugins": [
+    {
+      "name": "claude-coach",
+      "description": "Session-aware coaching for Claude Code — curated tips and live contextual advice",
+      "source": ".",
+      "category": "productivity"
+    }
+  ]
+}
