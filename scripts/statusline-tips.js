@@ -11,7 +11,7 @@ let advisor;
 try {
   advisor = require("./session-advisor");
 } catch {
-  process.stdout.write("");
+  // Can't load advisor — exit silently (Claude Code shows "..." for empty output)
   process.exit(0);
 }
 
@@ -23,6 +23,7 @@ process.stdin.on("end", () => {
     const data = JSON.parse(input);
     process.stdout.write(advisor.getSessionAdvice({ sessionId: data.session_id, cwd: data.cwd }));
   } catch {
-    process.stdout.write("");
+    // Fallback: show a random tip even if stdin parse failed
+    process.stdout.write(advisor.getSessionAdvice());
   }
 });
