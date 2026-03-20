@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Copies runtime files to ~/.claude/.coach/ so the statusline never
- * reaches back into the plugin cache. Idempotent — safe to re-run
+ * Copies runtime files to ~/.claude/plugins/claude-coach/ so the statusline
+ * never reaches back into the plugin cache. Idempotent — safe to re-run
  * on every plugin update.
  *
  * Part of claude-coach.
  * Source: CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..")
- * Target: ~/.claude/.coach/
+ * Target: ~/.claude/plugins/claude-coach/
  *
  * Files copied:
  *   statusline-tips.js   (statusline entrypoint)
@@ -21,7 +21,7 @@ const path = require("path");
 const os = require("os");
 
 const src = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..");
-const dest = path.join(os.homedir(), ".claude", ".coach");
+const dest = path.join(os.homedir(), ".claude", "plugins", "claude-coach");
 
 const FILES = [
   { from: path.join("scripts", "statusline-tips.js"), to: "statusline-tips.js" },

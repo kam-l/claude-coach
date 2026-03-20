@@ -115,7 +115,7 @@ try {
 
   writeJSON(settingsPath, settings);
 
-  // Copy runtime files to ~/.claude/.coach/ (survives plugin version bumps)
+  // Copy runtime files to ~/.claude/plugins/claude-coach/ (survives plugin version bumps)
   try {
     require("child_process").execSync(
       `"${process.execPath}" "${path.join(srcDir, "scripts", "install-statusline.js")}"`,

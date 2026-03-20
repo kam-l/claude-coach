@@ -6,7 +6,7 @@ const https = require("https");
 const os = require("os");
 const path = require("path");
 
-const LOG_PATH = path.join(os.homedir(), ".claude", ".coach", "enrichment-log.jsonl");
+const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "enrichment-log.jsonl");
 
 const DIRECTIVES = {
   clarify: "<first_step>Above prompt has ambiguous scope. Use AskUserQuestion to ask exactly 1 clarifying question before reading any files.</first_step>",

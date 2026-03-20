@@ -3,7 +3,7 @@
  * Mines the local Claude Code setup and uses Sonnet to produce
  * a compact coaching reference for the session advisor.
  *
- * Output: ~/.claude/.coach/setup-context.md
+ * Output: ~/.claude/plugins/claude-coach/setup-context.md
  * Run at: install/refresh time (not every advisor cycle)
  *
  * Cost: one `claude -p --model sonnet` call (~$0.05-0.10)
@@ -17,7 +17,7 @@ const { spawnSync } = require("child_process");
 const home = os.homedir();
 const claudeHome = path.join(home, ".claude");
 const projectDir = process.env.CLAUDE_PROJECT_ROOT || process.cwd();
-const dest = path.join(claudeHome, ".coach", "setup-context.md");
+const dest = path.join(claudeHome, "plugins", "claude-coach", "setup-context.md");
 
 // --- Helpers ---
 

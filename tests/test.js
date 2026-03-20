@@ -242,7 +242,7 @@ fs.rmSync(tmpDir2, { recursive: true, force: true });
 describe("install-statusline.js");
 
 const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-home-"));
-const tmpTipsDir = path.join(tmpHome, ".claude", ".coach");
+const tmpTipsDir = path.join(tmpHome, ".claude", "plugins", "claude-coach");
 
 try {
   const installResult = execSync(
@@ -271,7 +271,7 @@ fs.rmSync(tmpHome, { recursive: true, force: true });
 
 describe("session-advisor library mode");
 
-// session-advisor resolves tips from ~/.claude/.coach/ — install there first
+// session-advisor resolves tips from ~/.claude/plugins/claude-coach/ — install there first
 const tmpHome2 = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-home2-"));
 try {
   execSync(

@@ -13,7 +13,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const CACHE_DIR = path.join(os.tmpdir(), "claude-coach-advisor");
+const CACHE_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "cache");
 
 try {
   const input = fs.readFileSync(0, "utf-8");

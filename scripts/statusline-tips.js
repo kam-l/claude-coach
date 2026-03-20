@@ -3,14 +3,14 @@
  * Claude Code statusline script for claude-coach plugin.
  * Reads session data from stdin, outputs a contextual tip.
  *
- * Install location: ~/.claude/.coach/statusline-tips.js
+ * Install location: ~/.claude/plugins/claude-coach/statusline-tips.js
  * Registered in settings.json as: {"type": "command", "command": "node {HOME}/.claude/.tips/statusline-tips.js"}
  */
 
 const path = require("path");
 const os = require("os");
 
-const TIPS_DIR = path.join(os.homedir(), ".claude", ".coach");
+const TIPS_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach");
 
 let advisor;
 try {

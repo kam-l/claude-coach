@@ -18,13 +18,13 @@ const { spawn, spawnSync } = require("child_process");
 const FG = "\x1b[38;5;248m";
 const RST = "\x1b[0m";
 
-const CACHE_DIR = path.join(os.tmpdir(), "claude-coach-advisor");
+const CACHE_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "cache");
 const HOME = os.homedir();
 
 // ─── Shared helpers ──────────────────────────────────────────────
 
 function tipsDir() {
-  return path.join(os.homedir(), ".claude", ".coach");
+  return path.join(os.homedir(), ".claude", "plugins", "claude-coach");
 }
 
 function loadTips() {
