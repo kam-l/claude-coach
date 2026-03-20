@@ -199,7 +199,10 @@ function runWorker(sessionId, cwd) {
 
     // Read pre-mined setup context (commands, skills, friction, tips)
     let setupContext = "";
-    try { setupContext = fs.readFileSync(path.join(tipsDir(), "setup-context.md"), "utf-8"); } catch {}
+    try {
+      setupContext = fs.readFileSync(path.join(tipsDir(), "setup-context.md"), "utf-8");
+      if (setupContext.length > 8000) setupContext = setupContext.slice(0, 8000);
+    } catch {}
 
     // Read knowledge (general Claude Code patterns)
     const knowledgePath = path.join(tipsDir(), "claude-usage.md");
@@ -342,11 +345,30 @@ function buildPrompt(setupContext, knowledge, transcript) {
 - Never mention tool calls, JSON structures, or system tags — stripped metadata
 - Insufficient transcript → {"tips":[],"reasoning":"insufficient context"}
 
-## User's setup and coaching reference
-${setupContext}
+## Watch for these situations (Boris Cherny + team best practices)
+- User correcting Claude repeatedly → suggest \`/clear\` and rewriting the prompt
+- Multi-file changes without plan mode → suggest \`Shift+Tab\` to enter plan mode
+- Long transcript with many tool results → suggest \`/compact\` before context rots
+- User describing file locations in prose → suggest \`@path\` references instead
+- Large feature request without scoping → suggest interview pattern first
+- User pasting long logs/data inline → suggest piping: \`cat file | claude\`
+- Unscoped exploration reading many files → say "use subagents" to throw compute
+- User hasn't committed in a while → suggest committing to checkpoint progress
+- Code changes without tests → suggest giving Claude a way to verify (2-3x quality)
+- User mixing unrelated tasks → suggest \`/clear\` between topics
+- Same bug fix attempted twice → suggest \`/rewind\` + different approach
+- Session continuing from previous work → mention \`--continue\` / \`--resume\`
+- Mediocre fix landed → "scrap this — implement the elegant solution you now see"
+- User micromanaging a bug fix → "paste the bug, say fix — don't micromanage how"
+- Repeated workflow done manually → "if >1x/day, make it a /command"
+- User doing everything in one session → suggest parallel worktrees (3-5 Claudes)
+- CLAUDE.md correction made → "Update CLAUDE.md so you don't repeat this"
+- Complex problem, no subagents → "say 'use subagents' for more compute"
+- User struggling with permissions → suggest \`/sandbox\` (84% fewer prompts)
 
-## Interaction patterns
-${knowledge}
+${setupContext ? `## User's setup and coaching reference\n${setupContext}` : ""}
+
+${knowledge ? `## Interaction patterns\n${knowledge}` : ""}
 
 ## Session transcript
 ${transcript}

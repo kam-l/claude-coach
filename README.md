@@ -10,7 +10,7 @@
 
 - **Prompt enrichment** — classifies ambiguous prompts and steers Claude's first action
 - **Adversarial commands** — `/think`, `/verify`, `/challenge`, `/refine` for structured decision-making
-- **69 curated tips** — workflow, context, agents, hooks, quality, performance
+- **100+ curated tips** — workflow, context, agents, hooks, quality, performance
 - **Sonnet advisor** — analyzes your transcript, coaches in real-time
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
@@ -84,7 +84,7 @@ Five commands for structured decision-making and quality assurance:
 
 ### 💡 Spinner tips (always on, zero cost)
 
-69 hand-curated tips rotate during tool calls. Passive reinforcement — you glance at them while waiting.
+100+ hand-curated tips (sourced from Boris Cherny + Anthropic team) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
 
 ### ℹ️ Sonnet advisor (opt-in)
 
@@ -144,12 +144,12 @@ Or run `/claude-coach:tips init` for guided setup.
 
 | Category | # | Examples |
 |----------|---|---------|
-| Workflow | 11 | Plan mode first, `/rewind` for off-track runs, fan-out with `claude -p` |
-| Context | 11 | 200-line CLAUDE.md limit, `/compact` at 50%, `.claudeignore` |
-| Agents | 16 | Generator/evaluator separation, pipeline gates, fan-out scoping |
-| Hooks | 9 | `exit 2` feedback, `statusMessage`, `async: true` for slow hooks |
-| Quality | 13 | Spec-driven review, explain-back, ultrathink, contrastive examples |
-| Performance | 9 | `/model` downgrade, `effortLevel`, worktree parallelism |
+| Workflow | 22 | Plan mode, `/rewind`, fan-out, "paste bug say fix", /loop, parallel worktrees |
+| Context | 20 | 200-line limit, `/compact` at 50%, "Update CLAUDE.md so you don't repeat this" |
+| Agents | 18 | Test time compute, "say use subagents", pipeline gates, fan-out scoping |
+| Hooks | 12 | `exit 2` feedback, route permissions to Opus, Stop hook to nudge |
+| Quality | 24 | "Grill me — no PR until I pass", prototype > PRD, Explanatory output style |
+| Performance | 17 | `/sandbox` (84% fewer prompts), voice dictation, Opus with thinking |
 
 ## All Commands
 
@@ -169,6 +169,7 @@ Or run `/claude-coach:tips init` for guided setup.
 
 ## Sources
 
+- [Boris Cherny's tips](https://github.com/shanraisshan/claude-code-best-practice) — community-curated best practices from the creator of Claude Code + team (primary source for tips)
 - [Anthropic Claude Code docs](https://code.claude.com/docs/en/best-practices)
 
 ## License
