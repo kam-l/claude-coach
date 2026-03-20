@@ -8,37 +8,43 @@ const path = require("path");
 
 const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "enrichment-log.jsonl");
 
+// --- Directive payloads (injected as additionalContext) ---
+// 3 directives: clarify > recon > plan (priority order, highest wins)
+// "challenge" removed: unclassifiable without session context
+// "decompose" merged into "plan": both use TodoWrite, distinction too subtle for 8B
+
 const DIRECTIVES = {
   clarify: `<user-prompt-submit-hook>
-BLOCKING REQUIREMENT — The user's prompt above has ambiguous scope. Before you read any files or call any tools, you MUST use AskUserQuestion to ask exactly 1 clarifying question. Do not guess. Do not proceed. Clarify first — wrong assumptions waste the user's context window.
+The user's prompt has ambiguous scope or missing critical detail. Before reading any files or calling any tools, respond with exactly 1 clarifying question to resolve the ambiguity. Do not call any tools first.
+Exception: if the conversation context already makes the intent clear, note that briefly and proceed normally.
 </user-prompt-submit-hook>`,
   plan: `<user-prompt-submit-hook>
-BLOCKING REQUIREMENT — The user's prompt above requires multi-file changes. Before any Edit or Write, you MUST use TodoWrite to outline all steps. Do not start coding yet. Planning prevents wasted edits and partial implementations.
+The user's prompt involves multiple files, subtasks, or architectural changes. Before any Edit or Write, use TodoWrite to outline all steps. If the prompt contains distinct subtasks, list them separately and complete sequentially.
+Exception: if you have already surveyed the scope and it is a single focused change, proceed normally.
 </user-prompt-submit-hook>`,
   recon: `<user-prompt-submit-hook>
-BLOCKING REQUIREMENT — The user's prompt above references code you haven't examined. Before proposing changes, you MUST use Read and Grep to survey the relevant files. Summarize what you find to the user before editing. Acting on assumptions about unread code produces wrong diffs.
-</user-prompt-submit-hook>`,
-  challenge: `<user-prompt-submit-hook>
-BLOCKING REQUIREMENT — The user's prompt above challenges a previous decision. Before changing any code, you MUST list the assumptions behind the current approach and present them to the user. Reversing without understanding why it was done this way risks reintroducing solved problems.
-</user-prompt-submit-hook>`,
-  decompose: `<user-prompt-submit-hook>
-BLOCKING REQUIREMENT — The user's prompt above contains multiple subtasks. Before starting work, you MUST use TodoWrite to list each subtask separately. Complete them sequentially and confirm each before moving to the next. Parallel execution of ambiguous subtasks compounds errors.
+The user's prompt references code you may not have examined in this conversation. Before proposing changes, use Read and Grep to survey the relevant files. Summarize what you find before editing.
+Exception: if you have already read the relevant files in this conversation, proceed normally.
 </user-prompt-submit-hook>`,
 };
 
-const SYSTEM_PROMPT = `You are a routing classifier for a Claude Code agent. You receive user prompts and select ONE behavioral directive to inject, or NONE if the prompt is clear and actionable.
+// --- Classifier system prompt ---
+// Calibrated for llama-3.1-8b-instant on pre-filtered prompts
+// (the local gate already removed trivially clear prompts)
 
-Respond with ONLY a JSON object: {"directive": "key"} or {"directive": "none"}
+const SYSTEM_PROMPT = `You are a routing classifier for a Claude Code agent. The user's prompt has already been pre-screened and passed because it contains complexity signals (hedging, questions, multiple sentences, or broad scope). Your job is to select the best behavioral directive, or none if the prompt is clear despite its surface complexity.
 
-Selection criteria:
-- "clarify" — Ambiguous scope, multiple interpretations, or missing critical detail.
-- "plan" — Changes across multiple files or architecture-level decisions.
-- "recon" — References code the user hasn't described.
-- "challenge" — Asks to revert, redo, or change a previous decision.
-- "decompose" — Contains 3+ distinct subtasks.
-- "none" — Clear, single-action. Agent can proceed normally.
+Your entire response must be exactly one JSON object and nothing else.
+Valid format: {"directive": "key"} or {"directive": "none"}
+Do not include any explanation, preamble, markdown formatting, or text outside the JSON.
 
-Bias toward "none". Only intervene when proceeding without the directive would likely produce a wrong or wasted result.`;
+Selection criteria (in priority order — when multiple apply, pick the highest):
+1. "clarify" — Ambiguous scope, multiple interpretations, or missing critical detail that would cause a wrong result.
+2. "recon" — References code, files, or systems the agent hasn't examined.
+3. "plan" — Requires changes across multiple files, contains 3+ subtasks, or involves architecture-level decisions.
+4. "none" — Clear and actionable despite complexity signals. The agent can proceed normally.
+
+Select "none" when the prompt has a clear single action, even if phrased as a question or with hedging.`;
 
 // --- Logging ---
 
