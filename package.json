@@ -1,6 +1,6 @@
 {
   "name": "@kam-l/claude-coach",
-  "version": "3.3.0",
+  "version": "4.0.0",
   "description": "Session-aware coaching for Claude Code — curated tips and live contextual advice",
   "bin": {
     "claude-coach": "scripts/apply-tips.js"
@@ -35,6 +35,7 @@
     "skills/",
     "hooks/",
     "commands/",
+    "agents/",
     "references/",
     "tips.json",
     ".claude-plugin/"
