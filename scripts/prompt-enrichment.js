@@ -9,11 +9,21 @@ const path = require("path");
 const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "enrichment-log.jsonl");
 
 const DIRECTIVES = {
-  clarify: "<first_step>Above prompt has ambiguous scope. Use AskUserQuestion to ask exactly 1 clarifying question before reading any files.</first_step>",
-  plan: "<first_step>Above prompt requires multi-file changes. Use TodoWrite to outline all steps before any Edit or Write.</first_step>",
-  recon: "<first_step>Above prompt references unexamined code. Use Read and Grep to survey relevant files first. Summarize before proposing changes.</first_step>",
-  challenge: "<first_step>Above prompt challenges a previous decision. List assumptions behind the current approach before changing code.</first_step>",
-  decompose: "<first_step>Above prompt contains multiple subtasks. Use TodoWrite to list each separately. Complete sequentially, confirm each before next.</first_step>",
+  clarify: `<user-prompt-submit-hook>
+BLOCKING REQUIREMENT — The user's prompt above has ambiguous scope. Before you read any files or call any tools, you MUST use AskUserQuestion to ask exactly 1 clarifying question. Do not guess. Do not proceed. Clarify first — wrong assumptions waste the user's context window.
+</user-prompt-submit-hook>`,
+  plan: `<user-prompt-submit-hook>
+BLOCKING REQUIREMENT — The user's prompt above requires multi-file changes. Before any Edit or Write, you MUST use TodoWrite to outline all steps. Do not start coding yet. Planning prevents wasted edits and partial implementations.
+</user-prompt-submit-hook>`,
+  recon: `<user-prompt-submit-hook>
+BLOCKING REQUIREMENT — The user's prompt above references code you haven't examined. Before proposing changes, you MUST use Read and Grep to survey the relevant files. Summarize what you find to the user before editing. Acting on assumptions about unread code produces wrong diffs.
+</user-prompt-submit-hook>`,
+  challenge: `<user-prompt-submit-hook>
+BLOCKING REQUIREMENT — The user's prompt above challenges a previous decision. Before changing any code, you MUST list the assumptions behind the current approach and present them to the user. Reversing without understanding why it was done this way risks reintroducing solved problems.
+</user-prompt-submit-hook>`,
+  decompose: `<user-prompt-submit-hook>
+BLOCKING REQUIREMENT — The user's prompt above contains multiple subtasks. Before starting work, you MUST use TodoWrite to list each subtask separately. Complete them sequentially and confirm each before moving to the next. Parallel execution of ambiguous subtasks compounds errors.
+</user-prompt-submit-hook>`,
 };
 
 const SYSTEM_PROMPT = `You are a routing classifier for a Claude Code agent. You receive user prompts and select ONE behavioral directive to inject, or NONE if the prompt is clear and actionable.
