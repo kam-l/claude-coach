@@ -28,6 +28,12 @@ function dataDir() {
 }
 
 function bundleRoot() {
+  // When running from the runtime dir, version.json records the source path.
+  try {
+    const v = JSON.parse(fs.readFileSync(path.join(__dirname, "version.json"), "utf-8"));
+    if (v.source) return v.source;
+  } catch {}
+  // Fallback: assume we're in scripts/ subdir of the bundle (dev/test mode).
   return path.resolve(__dirname, "..");
 }
 
