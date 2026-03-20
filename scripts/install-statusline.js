@@ -12,7 +12,7 @@
  *   statusline-tips.js   (statusline entrypoint)
  *   session-advisor.js   (library + worker)
  *   mine-setup.js        (setup context miner)
- *   tips.json            (tip database)
+ *   tips.json            (tip database — fallback for random tips)
  *   claude-usage.md      (knowledge for advisor worker)
  */
 

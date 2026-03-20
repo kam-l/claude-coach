@@ -199,7 +199,7 @@ function runWorker(sessionId, cwd) {
 
     // Read pre-mined setup context (commands, skills, friction, tips)
     let setupContext = "";
-    try { setupContext = fs.readFileSync(path.join(tipsDir(), "setup-context.txt"), "utf-8"); } catch {}
+    try { setupContext = fs.readFileSync(path.join(tipsDir(), "setup-context.md"), "utf-8"); } catch {}
 
     // Read knowledge (general Claude Code patterns)
     const knowledgePath = path.join(tipsDir(), "claude-usage.md");

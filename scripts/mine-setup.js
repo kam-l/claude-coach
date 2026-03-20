@@ -3,7 +3,7 @@
  * Mines the local Claude Code setup and uses Sonnet to produce
  * a compact coaching reference for the session advisor.
  *
- * Output: ~/.claude/.coach/setup-context.txt
+ * Output: ~/.claude/.coach/setup-context.md
  * Run at: install/refresh time (not every advisor cycle)
  *
  * Cost: one `claude -p --model sonnet` call (~$0.05-0.10)
@@ -16,7 +16,8 @@ const { spawnSync } = require("child_process");
 
 const home = os.homedir();
 const claudeHome = path.join(home, ".claude");
-const dest = path.join(claudeHome, ".coach", "setup-context.txt");
+const projectDir = process.env.CLAUDE_PROJECT_ROOT || process.cwd();
+const dest = path.join(claudeHome, ".coach", "setup-context.md");
 
 // --- Helpers ---
 
@@ -90,30 +91,49 @@ function resolveClaudePath() {
 
 // --- Collect raw data ---
 
-// Commands (global — all user-invocable)
+// Commands (global + project)
 const commands = [];
-for (const file of walkFiles(path.join(claudeHome, "commands"), n => n.endsWith(".md"))) {
-  const name = path.basename(file, ".md");
-  const fm = extractFrontmatter(file);
-  commands.push({ name: `/${name}`, description: fm.description || "" });
+const commandDirs = [
+  path.join(claudeHome, "commands"),
+  path.join(projectDir, ".claude", "commands"),
+];
+for (const dir of commandDirs) {
+  for (const file of walkFiles(dir, n => n.endsWith(".md"))) {
+    const name = path.basename(file, ".md");
+    const fm = extractFrontmatter(file);
+    commands.push({ name: `/${name}`, description: fm.description || "" });
+  }
 }
 
-// Skills (global, deduplicated, user-invocable only)
+// Skills (global + project, deduplicated, user-invocable only)
 const seen = new Set();
 const skills = [];
-for (const file of walkFiles(path.join(claudeHome, "skills"), n => n === "SKILL.md")) {
-  const name = path.basename(path.dirname(file));
-  if (seen.has(name)) continue;
-  seen.add(name);
-  const fm = extractFrontmatter(file);
-  if (fm["user-invocable"] === "false") continue;
-  skills.push({ name, description: fm.description || "" });
+const skillDirs = [
+  path.join(claudeHome, "skills"),
+  path.join(claudeHome, "plugins", "cache"),
+  path.join(projectDir, ".claude", "skills"),
+  path.join(projectDir, "skills"),
+];
+for (const dir of skillDirs) {
+  for (const file of walkFiles(dir, n => n === "SKILL.md")) {
+    const name = path.basename(path.dirname(file));
+    if (seen.has(name)) continue;
+    seen.add(name);
+    const fm = extractFrontmatter(file);
+    if (fm["user-invocable"] === "false") continue;
+    skills.push({ name, description: fm.description || "" });
+  }
 }
 
-// Hooks (from settings)
+// Hooks (global + project settings)
 const hooks = [];
 const seenHooks = new Set();
-for (const sp of [path.join(claudeHome, "settings.json"), path.join(claudeHome, "settings.local.json")]) {
+for (const sp of [
+  path.join(claudeHome, "settings.json"),
+  path.join(claudeHome, "settings.local.json"),
+  path.join(projectDir, ".claude", "settings.json"),
+  path.join(projectDir, ".claude", "settings.local.json"),
+]) {
   const settings = safeJSON(sp);
   if (!settings || !settings.hooks) continue;
   for (const [event, handlers] of Object.entries(settings.hooks)) {
@@ -152,21 +172,10 @@ try {
   }
 } catch {}
 
-// Static tips
-const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..");
-let tips = [];
-try {
-  const db = safeJSON(path.join(pluginRoot, "tips.json"))
-    || safeJSON(path.join(claudeHome, ".coach", "tips.json"));
-  if (db && db.categories) {
-    tips = Object.values(db.categories).flat().map(t => t.replace(/^💡\s*/, ""));
-  }
-} catch {}
-
 // --- Short-circuit if nothing to mine ---
 
-if (commands.length === 0 && skills.length === 0 && friction.length === 0 && tips.length === 0) {
-  console.log("Nothing to mine yet — no commands, skills, friction, or tips found.");
+if (commands.length === 0 && skills.length === 0 && friction.length === 0) {
+  console.log("Nothing to mine yet — no commands, skills, or friction found.");
   process.exit(0);
 }
 
@@ -216,10 +225,6 @@ if (result.error || result.status !== 0 || !output) {
     for (const s of skills) fallback.push(`  ${s.name} — ${(s.description || "").slice(0, 60)}`);
   }
   if (hooks.length > 0) fallback.push(`Hooks: ${hooks.join(", ")}`);
-  if (tips.length > 0) {
-    fallback.push("Tips:");
-    for (const t of tips) fallback.push(`  ${t}`);
-  }
   try {
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, fallback.join("\n"));
@@ -230,16 +235,10 @@ if (result.error || result.status !== 0 || !output) {
   process.exit(0);
 }
 
-// Append tips verbatim (not sent through Sonnet — preserves exact wording)
-const tipsBlock = tips.length > 0
-  ? "\n\n---\n\nTIP LIBRARY\n\nSurface these verbatim when session matches:\n" + tips.map(t => t).join("\n")
-  : "";
-
 try {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
-  const final = output + tipsBlock;
-  fs.writeFileSync(dest, final);
-  const tokens = Math.ceil(final.length / 4);
+  fs.writeFileSync(dest, output);
+  const tokens = Math.ceil(output.length / 4);
   console.log(`Setup context mined (~${tokens} tokens) → ${dest}`);
 } catch (e) {
   console.warn(`mine-setup: failed (${e.message})`);

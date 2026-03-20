@@ -32,9 +32,9 @@ node -e "try { require('fs').unlinkSync(require('path').join(require('os').homed
 
 ## 2b. Mine setup context
 
-Scans the user's commands, skills, hooks, friction, and tip library. Uses Sonnet to produce a compact coaching reference (~$0.05-0.10 one-time cost).
+Scans the user's commands, skills, hooks, and friction (global + project). Uses Sonnet to produce a compact coaching reference (~$0.05-0.10 one-time cost).
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/mine-setup.js"
+node "${HOME}/.claude/.coach/mine-setup.js"
 ```
 
 Show the output to the user via `AskUserQuestion` — they should verify it looks reasonable.
@@ -65,12 +65,12 @@ Use the resolved home directory path, not `~`.
 ## 3. Verify
 
 ```bash
-node -e "JSON.parse(require('fs').readFileSync('${CLAUDE_PLUGIN_ROOT}/tips.json','utf-8')); console.log('tips.json: valid')"
 node -e "
 const fs = require('fs'), path = require('path'), os = require('os');
 const coachDir = path.join(os.homedir(), '.claude', '.coach');
 console.log(fs.existsSync(path.join(coachDir, 'session-advisor.js')) ? 'runtime: installed' : 'runtime: MISSING');
 console.log(fs.existsSync(path.join(coachDir, 'tips.json')) ? 'tips.json: copied' : 'tips.json: MISSING');
+console.log(fs.existsSync(path.join(coachDir, 'setup-context.md')) ? 'setup-context: mined' : 'setup-context: MISSING');
 const paths = [
   path.join(os.homedir(), '.claude', 'settings.json'),
   path.join(process.cwd(), '.claude', 'settings.json'),
