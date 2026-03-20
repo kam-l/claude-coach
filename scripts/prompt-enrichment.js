@@ -18,7 +18,7 @@ The user's prompt has ambiguous scope or missing critical detail. Use the Skill 
 Exception: if the conversation context already makes the intent clear, note that briefly and proceed normally.
 </user-prompt-submit-hook>`,
   probe: `<user-prompt-submit-hook>
-The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Use the Skill tool to invoke /claude-coach:think with the claim or design question as the argument. This will run thesis/antithesis/synthesis to surface trade-offs before committing to a path.
+The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Use the Skill tool to invoke /claude-coach:verify with the claim or design question as the argument. This will auto-escalate to the right level of scrutiny (challenge, refine, or think).
 Exception: if the user explicitly asks you to just pick, proceed with your best judgment.
 </user-prompt-submit-hook>`,
   recon: `<user-prompt-submit-hook>

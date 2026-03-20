@@ -1,6 +1,6 @@
 # claude-coach
 
-**Session-aware coaching for Claude Code — curated tips, live Sonnet advisor, and context injection.**
+**Coaching for both you and Claude — tips, prompt enrichment, adversarial thinking, and live session advice.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -8,12 +8,11 @@
 
 ![claude-coach showcase](showcase.gif)
 
-- **69 curated tips** — workflow, context, agents, hooks, quality, performance
 - **Prompt enrichment** — classifies ambiguous prompts and steers Claude's first action
+- **Adversarial commands** — `/think`, `/verify`, `/challenge`, `/refine` for structured decision-making
+- **69 curated tips** — workflow, context, agents, hooks, quality, performance
 - **Sonnet advisor** — analyzes your transcript, coaches in real-time
-- **Hook injection** — strong advice injected directly into Claude's context
-- **Setup mining** — Sonnet pre-mines your toolchain into a coaching reference
-- **Zero-cost fallback** — tips rotate in the spinner with no LLM calls when advisor is off
+- **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
 ## Install
 
@@ -39,15 +38,49 @@ npm install -g @kam-l/claude-coach
 # Restart Claude Code to load changes
 ```
 
-## Four Delivery Modes
+## How It Works
 
-### 🎯 Prompt enrichment (automatic, free)
+### 🎯 Prompt enrichment (automatic)
 
-Classifies ambiguous user prompts and injects a behavioral directive before Claude acts. A local gate skips trivial prompts (short commands, confirmations, slash commands) — only hedging, vague, multi-sentence, or broad-scope prompts are classified.
+Classifies ambiguous user prompts via Groq and routes Claude to the right workflow before it starts working:
 
-Directives: `clarify` (ask before acting), `plan` (outline first), `recon` (read code first), `challenge` (list assumptions), `decompose` (break into subtasks).
+```
+User prompt → local gate → Groq classifier
+                                │
+                ┌───────┬───────┼───────┬────────┐
+                ▼       ▼       ▼       ▼        ▼
+             clarify  probe   recon   plan     none
+                │       │       │       │
+                ▼       ▼       ▼       ▼
+          /question  /verify  Agent   EnterPlanMode
+                       │     (Explore)
+               ┌───────┼───────┐
+               ▼       ▼       ▼
+          /challenge /refine /think
+```
+
+| Directive | Routes to | When |
+|-----------|----------|------|
+| `clarify` | `/claude-coach:question` | Ambiguous scope, missing detail |
+| `probe` | `/claude-coach:verify` | Unstated assumptions, opinions, trade-offs — auto-escalates to challenge, refine, or think |
+| `recon` | Agent (Explore) | References unexamined code |
+| `plan` | EnterPlanMode | Multi-file, 3+ subtasks, architecture |
+
+The local gate skips trivial prompts (short commands, confirmations, slash commands) with zero latency. Only hedging, vague, multi-sentence, or broad-scope prompts reach the classifier (~250ms via Groq free tier).
 
 Requires `GROQ_API_KEY` (free — [console.groq.com](https://console.groq.com)) or `ANTHROPIC_API_KEY` (fallback) as a system environment variable. Silently skips if neither is set.
+
+### 🗡️ Adversarial commands
+
+Five commands for structured decision-making and quality assurance:
+
+| Command | What it does |
+|---------|-------------|
+| `/claude-coach:question` | Batch Q&A with choices — structured clarification |
+| `/claude-coach:think` | Thesis/antithesis/synthesis dialectic — spawns attacker + defender agents |
+| `/claude-coach:verify` | Auto-escalating verification — routes to challenge, refine, or think |
+| `/claude-coach:challenge` | Single-pass adversarial stress-test |
+| `/claude-coach:refine` | Iterative adversarial refinement loop (up to 5 rounds) |
 
 ### 💡 Spinner tips (always on, zero cost)
 
@@ -63,16 +96,23 @@ A detached Sonnet worker reads your session transcript and produces 1-3 tips gro
 ℹ️ The retry logic in api.js needs a backoff — ask Claude to add one
 ```
 
-The advisor knows your setup — it reads a pre-mined coaching reference containing your commands, skills, hooks, friction patterns, and the full tip library. It surfaces the *right* existing tip when the session matches, or generates a new one when none fit.
+When the advisor has *strong* advice, it's injected directly into Claude's context via `additionalContext`. Claude acts on the coaching without you having to relay it.
 
-### ⚠️ Hook injection (automatic)
+## Bundled Agents
 
-When the advisor has *strong* advice, it's injected directly into Claude's context via `UserPromptSubmit` → `additionalContext`. Claude acts on the coaching without you having to relay it. The advice is consumed once and deleted — no repeats.
+| Agent | Role |
+|-------|------|
+| `adversary` | Universal stress-tester — finds concrete problems with quality + analytical lenses |
+| `attacker` | Antithesis advocate — builds the case AGAINST a claim (used by `/think`) |
+| `defender` | Thesis advocate — builds the case FOR a claim (used by `/think`) |
 
-```
-[Session Coach]
-⚠️ Gate each pipeline step — the reviewer agent has no verification gate
-```
+## Thinking Lenses
+
+12 analytical frameworks available via the `structured-thinking` skill:
+
+`inversion` · `first-principles` · `second-order` · `5-whys` · `pareto` · `via-negativa` · `opportunity-cost` · `occams-razor` · `10-10-10` · `eisenhower-matrix` · `swot` · `one-thing`
+
+Used automatically by the adversary agent when analyzing decisions and assumptions.
 
 ## Configuration
 
@@ -90,7 +130,7 @@ When the advisor has *strong* advice, it's injected directly into Claude's conte
 |----------|---------|-------------|
 | `CLAUDE_COACH` | `0` | Enable Sonnet advisor + hook injection |
 | `CLAUDE_COACH_INTERVAL` | `900` | Seconds between advisor cycles |
-| `GROQ_API_KEY` | — | Prompt enrichment via Groq (free tier, ~100-250ms) |
+| `GROQ_API_KEY` | — | Prompt enrichment via Groq (free tier, ~250ms) |
 | `ANTHROPIC_API_KEY` | — | Prompt enrichment fallback via Haiku (~$1/month) |
 
 Set API keys as **system environment variables**, not in settings.json.
@@ -111,7 +151,7 @@ Or run `/claude-coach:tips init` for guided setup.
 | Quality | 13 | Spec-driven review, explain-back, ultrathink, contrastive examples |
 | Performance | 9 | `/model` downgrade, `effortLevel`, worktree parallelism |
 
-## Commands
+## All Commands
 
 | Command | What it does |
 |---------|-------------|
@@ -121,6 +161,11 @@ Or run `/claude-coach:tips init` for guided setup.
 | `/claude-coach:tips list` | Print all tips by category |
 | `/claude-coach:tips advisor` | Configure the Sonnet session advisor |
 | `/claude-coach:tips uninstall` | Remove all traces |
+| `/claude-coach:question` | Batch Q&A with choices |
+| `/claude-coach:think` | Thesis/antithesis/synthesis dialectic |
+| `/claude-coach:verify` | Auto-escalating adversarial verification |
+| `/claude-coach:challenge` | Single-pass adversarial stress-test |
+| `/claude-coach:refine` | Iterative adversarial refinement loop |
 
 ## Sources
 
