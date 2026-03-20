@@ -9,22 +9,24 @@ const path = require("path");
 const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "enrichment-log.jsonl");
 
 // --- Directive payloads (injected as additionalContext) ---
-// 3 directives: clarify > recon > plan (priority order, highest wins)
-// "challenge" removed: unclassifiable without session context
-// "decompose" merged into "plan": both use TodoWrite, distinction too subtle for 8B
+// 4 directives: clarify > probe > recon > plan (priority order, highest wins)
 
 const DIRECTIVES = {
   clarify: `<user-prompt-submit-hook>
-The user's prompt has ambiguous scope or missing critical detail. Before reading any files or calling any tools, respond with exactly 1 clarifying question to resolve the ambiguity. Do not call any tools first.
+The user's prompt has ambiguous scope or missing critical detail. Before reading any files or calling any tools, ask clarifying questions to resolve the ambiguity. Ask as many as needed to understand intent. Do not call any tools first.
 Exception: if the conversation context already makes the intent clear, note that briefly and proceed normally.
 </user-prompt-submit-hook>`,
-  plan: `<user-prompt-submit-hook>
-The user's prompt involves multiple files, subtasks, or architectural changes. Before any Edit or Write, use TodoWrite to outline all steps. If the prompt contains distinct subtasks, list them separately and complete sequentially.
-Exception: if you have already surveyed the scope and it is a single focused change, proceed normally.
+  probe: `<user-prompt-submit-hook>
+The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Before acting, surface the assumptions you see and ask the user to confirm or correct them. Present trade-offs rather than picking one path silently.
+Exception: if the user explicitly asks you to just pick, proceed with your best judgment.
 </user-prompt-submit-hook>`,
   recon: `<user-prompt-submit-hook>
 The user's prompt references code you may not have examined in this conversation. Before proposing changes, use Read and Grep to survey the relevant files. Summarize what you find before editing.
 Exception: if you have already read the relevant files in this conversation, proceed normally.
+</user-prompt-submit-hook>`,
+  plan: `<user-prompt-submit-hook>
+The user's prompt involves multiple files, subtasks, or architectural changes. Enter plan mode — use EnterPlanMode to outline all steps before any Edit or Write. If the prompt contains distinct subtasks, list them separately and complete sequentially.
+Exception: if you have already surveyed the scope and it is a single focused change, proceed normally.
 </user-prompt-submit-hook>`,
 };
 
@@ -40,9 +42,10 @@ Do not include any explanation, preamble, markdown formatting, or text outside t
 
 Selection criteria (in priority order — when multiple apply, pick the highest):
 1. "clarify" — Ambiguous scope, multiple interpretations, or missing critical detail that would cause a wrong result.
-2. "recon" — References code, files, or systems the agent hasn't examined.
-3. "plan" — Requires changes across multiple files, contains 3+ subtasks, or involves architecture-level decisions.
-4. "none" — Clear and actionable despite complexity signals. The agent can proceed normally.
+2. "probe" — Contains unstated assumptions, asks for an opinion or recommendation, or requests open-ended research/comparison.
+3. "recon" — References code, files, or systems the agent hasn't examined.
+4. "plan" — Requires changes across multiple files, contains 3+ subtasks, or involves architecture-level decisions.
+5. "none" — Clear and actionable despite complexity signals. The agent can proceed normally.
 
 Select "none" when the prompt has a clear single action, even if phrased as a question or with hedging.`;
 
