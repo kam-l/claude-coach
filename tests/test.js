@@ -157,6 +157,80 @@ assert(stableIndex(pool, 30) === stableIndex(pool, 30), "stable across same-tick
 assert(stableIndex(["x"], 10) === 0, "single-element pool always returns 0");
 assert(stableIndex([], 10) !== stableIndex([], 10) || true, "empty pool handled (NaN)");
 
+// ─── Unit: prompt-enrichment.js local gate ──────────────────────
+
+describe("prompt-enrichment.js shouldSkip");
+
+const enrichSrc = fs.readFileSync(path.join(ROOT, "scripts", "prompt-enrichment.js"), "utf-8");
+const shouldSkip = new Function(
+  "return " + enrichSrc.match(/function shouldSkip[\s\S]*?^}/m)[0]
+)();
+const shouldPass = new Function(
+  "return " + enrichSrc.match(/function shouldPass[\s\S]*?^}/m)[0]
+)();
+
+// Helper: should the prompt reach the classifier?
+function shouldClassify(p) { return !shouldSkip(p) && shouldPass(p); }
+
+// --- shouldSkip: trivial prompts ---
+assert(shouldSkip("yes"), "skip: trivial 'yes'");
+assert(shouldSkip("no"), "skip: trivial 'no'");
+assert(shouldSkip("lgtm"), "skip: trivial 'lgtm'");
+assert(shouldSkip("ship it"), "skip: trivial 'ship it'");
+assert(shouldSkip("go ahead"), "skip: trivial 'go ahead'");
+assert(shouldSkip("fix bug"), "skip: <5 tokens");
+assert(shouldSkip("/commit -m 'update'"), "skip: starts with /");
+assert(shouldSkip("# heading stuff here now"), "skip: starts with #");
+assert(shouldSkip("* bullet point item here"), "skip: starts with *");
+
+// --- shouldSkip: clear single-action prompts ---
+assert(shouldSkip("Add a loading spinner to the submit button component"), "skip: clear single-action");
+assert(shouldSkip("Rename the variable from foo to bar in utils.js"), "skip: clear rename");
+assert(shouldSkip("Delete the unused import on line 42 of utils.ts"), "skip: precise action");
+
+// --- shouldSkip: should NOT skip these ---
+assert(!shouldSkip("Maybe change how that thing handles errors? I am not sure"), "no-skip: hedging + question");
+assert(!shouldSkip("How does the caching layer work?"), "no-skip: question mark");
+assert(!shouldSkip("I think we should probably refactor the auth module"), "no-skip: hedging words");
+assert(!shouldSkip("Change the entire authentication flow to use OAuth"), "no-skip: broad scope (entire)");
+assert(!shouldSkip("It might break something if we change this"), "no-skip: vague + hedging");
+
+describe("prompt-enrichment.js shouldPass");
+
+// --- shouldPass: question marks ---
+assert(shouldPass("How does the caching layer work?"), "pass: question mark");
+assert(shouldPass("Can you add a loading spinner?"), "pass: polite question");
+
+// --- shouldPass: hedging ---
+assert(shouldPass("I think we should probably refactor the auth module"), "pass: hedging (I think, probably)");
+assert(shouldPass("Maybe we could improve the error handling"), "pass: hedging (maybe, could)");
+
+// --- shouldPass: broad scope ---
+assert(shouldPass("Change the entire authentication flow"), "pass: broad scope (entire)");
+assert(shouldPass("Update all the tests everywhere"), "pass: broad scope (all, everywhere)");
+
+// --- shouldPass: multi-sentence ---
+assert(shouldPass("Fix the bug. Also update the docs. Clean up the tests."), "pass: multi-sentence");
+
+// --- shouldPass: should NOT pass (default non-intervention) ---
+assert(!shouldPass("Add error handling to the submit function"), "no-pass: clear single action");
+assert(!shouldPass("Read the package.json file and tell me the version"), "no-pass: clear read request");
+
+describe("prompt-enrichment.js shouldClassify (end-to-end gate)");
+
+// --- Full gate: should reach classifier ---
+assert(shouldClassify("Maybe change how that thing handles errors? I am not sure"), "classify: hedging + vague + question");
+assert(shouldClassify("How does the caching layer work?"), "classify: question");
+assert(shouldClassify("I think we should probably refactor the auth module"), "classify: hedging");
+assert(shouldClassify("Change the entire authentication flow to use OAuth"), "classify: broad scope");
+
+// --- Full gate: should NOT reach classifier ---
+assert(!shouldClassify("yes"), "no-classify: trivial");
+assert(!shouldClassify("fix the bug"), "no-classify: short");
+assert(!shouldClassify("Add a loading spinner to the submit button component"), "no-classify: clear action");
+assert(!shouldClassify("Rename the variable from foo to bar in utils.js"), "no-classify: clear rename");
+assert(!shouldClassify("Run npm install and then npm test"), "no-classify: clear instructions");
+
 // ─── Unit: merge-tips.js dedup logic ─────────────────────────────
 
 describe("merge-tips.js dedup");
