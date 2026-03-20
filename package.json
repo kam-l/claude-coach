@@ -34,6 +34,7 @@
     "scripts/",
     "skills/",
     "hooks/",
+    "commands/",
     "references/",
     "tips.json",
     ".claude-plugin/"

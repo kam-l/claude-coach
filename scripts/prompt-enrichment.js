@@ -10,22 +10,23 @@ const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "
 
 // --- Directive payloads (injected as additionalContext) ---
 // 4 directives: clarify > probe > recon > plan (priority order, highest wins)
+// Routes to plugin commands (/claude-coach:*) and built-in tools (Agent, EnterPlanMode)
 
 const DIRECTIVES = {
   clarify: `<user-prompt-submit-hook>
-The user's prompt has ambiguous scope or missing critical detail. Before reading any files or calling any tools, ask clarifying questions to resolve the ambiguity. Ask as many as needed to understand intent. Do not call any tools first.
+The user's prompt has ambiguous scope or missing critical detail. Use the Skill tool to invoke /claude-coach:question with the ambiguous points as arguments. This will run structured batch Q&A to resolve ambiguity before you start working.
 Exception: if the conversation context already makes the intent clear, note that briefly and proceed normally.
 </user-prompt-submit-hook>`,
   probe: `<user-prompt-submit-hook>
-The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Before acting, surface the assumptions you see and ask the user to confirm or correct them. Present trade-offs rather than picking one path silently.
+The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Use the Skill tool to invoke /claude-coach:think with the claim or design question as the argument. This will run thesis/antithesis/synthesis to surface trade-offs before committing to a path.
 Exception: if the user explicitly asks you to just pick, proceed with your best judgment.
 </user-prompt-submit-hook>`,
   recon: `<user-prompt-submit-hook>
-The user's prompt references code you may not have examined in this conversation. Before proposing changes, use Read and Grep to survey the relevant files. Summarize what you find before editing.
+The user's prompt references code you may not have examined in this conversation. Use the Agent tool with subagent_type "Explore" to survey the relevant files and summarize findings before proposing changes.
 Exception: if you have already read the relevant files in this conversation, proceed normally.
 </user-prompt-submit-hook>`,
   plan: `<user-prompt-submit-hook>
-The user's prompt involves multiple files, subtasks, or architectural changes. Enter plan mode — use EnterPlanMode to outline all steps before any Edit or Write. If the prompt contains distinct subtasks, list them separately and complete sequentially.
+The user's prompt involves multiple files, subtasks, or architectural changes. Use the EnterPlanMode tool to outline all steps before any Edit or Write. If the prompt contains distinct subtasks, list them separately and complete sequentially.
 Exception: if you have already surveyed the scope and it is a single focused change, proceed normally.
 </user-prompt-submit-hook>`,
 };
