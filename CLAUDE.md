@@ -10,8 +10,9 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - `prompt-enrichment.js` must skip advisor prompts (starts with "Analyze a Claude Code session transcript")
 - Advisor NEVER suggests `/compact` or `/clear` — user manages context themselves
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing
-- Runtime files install to `~/.claude/plugins/claude-coach/` via `install-statusline.js` (decoupled from plugin cache)
-- All artifacts (cache, logs, tips, advisor state) live under `~/.claude/plugins/claude-coach/`
+- `install-statusline.js` copies only 2 files (statusline-tips.js, session-advisor.js) to `~/.claude/plugins/claude-coach/`
+- Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
+- Mutable data (cache, logs, setup-context) lives under `~/.claude/plugins/claude-coach/`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (seconds, default 900)
 - Env vars: `GROQ_API_KEY` (prompt enrichment, free), `ANTHROPIC_API_KEY` (fallback, paid)
 

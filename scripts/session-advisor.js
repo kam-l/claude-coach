@@ -23,12 +23,16 @@ const HOME = os.homedir();
 
 // ─── Shared helpers ──────────────────────────────────────────────
 
-function tipsDir() {
+function dataDir() {
   return path.join(os.homedir(), ".claude", "plugins", "claude-coach");
 }
 
+function bundleRoot() {
+  return path.resolve(__dirname, "..");
+}
+
 function loadTips() {
-  const tipsFile = path.join(tipsDir(), "tips.json");
+  const tipsFile = path.join(bundleRoot(), "tips.json");
   try {
     const db = JSON.parse(fs.readFileSync(tipsFile, "utf-8"));
     return Object.values(db.categories).flat();
@@ -201,12 +205,12 @@ function runWorker(sessionId, cwd) {
     // Read pre-mined setup context (commands, skills, friction, tips)
     let setupContext = "";
     try {
-      setupContext = fs.readFileSync(path.join(tipsDir(), "setup-context.md"), "utf-8");
+      setupContext = fs.readFileSync(path.join(dataDir(), "setup-context.md"), "utf-8");
       if (setupContext.length > 8000) setupContext = setupContext.slice(0, 8000);
     } catch {}
 
     // Read knowledge (general Claude Code patterns)
-    const knowledgePath = path.join(tipsDir(), "claude-usage.md");
+    const knowledgePath = path.join(bundleRoot(), "references", "claude-usage.md");
     let knowledge = "";
     try { knowledge = fs.readFileSync(knowledgePath, "utf-8"); } catch {}
 

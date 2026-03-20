@@ -89,15 +89,6 @@ process.stdin.on("end", () => {
   console.log(`Strong: ${strong.length} added to ${tipsFile}`);
   console.log(`Duplicates skipped: ${items.length - strong.length - weak.length}`);
 
-  // Propagate to runtime copy (~/.claude/plugins/claude-coach/tips.json)
-  const runtimeCopy = path.join(require("os").homedir(), ".claude", "plugins", "claude-coach", "tips.json");
-  try {
-    if (fs.existsSync(path.dirname(runtimeCopy))) {
-      fs.copyFileSync(tipsFile, runtimeCopy);
-      console.log(`Runtime copy updated: ${runtimeCopy}`);
-    }
-  } catch { /* fail-open */ }
-
   // Validate output
   try {
     JSON.parse(fs.readFileSync(tipsFile, "utf-8"));

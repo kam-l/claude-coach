@@ -7,14 +7,9 @@
  * Registered in settings.json as: {"type": "command", "command": "node {HOME}/.claude/.tips/statusline-tips.js"}
  */
 
-const path = require("path");
-const os = require("os");
-
-const TIPS_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach");
-
 let advisor;
 try {
-  advisor = require(path.join(TIPS_DIR, "session-advisor"));
+  advisor = require("./session-advisor");
 } catch {
   process.stdout.write("");
   process.exit(0);

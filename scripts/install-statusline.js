@@ -11,9 +11,9 @@
  * Files copied:
  *   statusline-tips.js   (statusline entrypoint)
  *   session-advisor.js   (library + worker)
- *   mine-setup.js        (setup context miner)
- *   tips.json            (tip database — fallback for random tips)
- *   claude-usage.md      (knowledge for advisor worker)
+ *
+ * Data files (tips.json, claude-usage.md) are read from __dirname at
+ * runtime — no copy needed.
  */
 
 const fs = require("fs");
@@ -26,10 +26,6 @@ const dest = path.join(os.homedir(), ".claude", "plugins", "claude-coach");
 const FILES = [
   { from: path.join("scripts", "statusline-tips.js"), to: "statusline-tips.js" },
   { from: path.join("scripts", "session-advisor.js"), to: "session-advisor.js" },
-  { from: path.join("scripts", "mine-setup.js"),      to: "mine-setup.js" },
-  { from: path.join("scripts", "coach-inject.js"),    to: "coach-inject.js" },
-  { from: "tips.json",                                to: "tips.json" },
-  { from: path.join("references", "claude-usage.md"), to: "claude-usage.md", optional: true },
 ];
 
 try {

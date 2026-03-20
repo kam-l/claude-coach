@@ -330,7 +330,8 @@ try {
   assert(installResult.includes("runtime files installed"), "reports success");
   assert(fs.existsSync(path.join(tmpTipsDir, "statusline-tips.js")), "copied statusline-tips.js");
   assert(fs.existsSync(path.join(tmpTipsDir, "session-advisor.js")), "copied session-advisor.js");
-  assert(fs.existsSync(path.join(tmpTipsDir, "tips.json")), "copied tips.json");
+  assert(!fs.existsSync(path.join(tmpTipsDir, "tips.json")), "does NOT copy tips.json (read from bundle)");
+  assert(!fs.existsSync(path.join(tmpTipsDir, "claude-usage.md")), "does NOT copy claude-usage.md (read from bundle)");
   assert(fs.existsSync(path.join(tmpTipsDir, "version.json")), "wrote version.json");
 
   const versionData = JSON.parse(fs.readFileSync(path.join(tmpTipsDir, "version.json"), "utf-8"));
@@ -345,24 +346,7 @@ fs.rmSync(tmpHome, { recursive: true, force: true });
 
 describe("session-advisor library mode");
 
-// session-advisor resolves tips from ~/.claude/plugins/claude-coach/ — install there first
-const tmpHome2 = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-home2-"));
-try {
-  execSync(
-    `"${process.execPath}" "${path.join(ROOT, "scripts", "install-statusline.js")}"`,
-    {
-      encoding: "utf-8",
-      timeout: 10000,
-      env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, HOME: tmpHome2, USERPROFILE: tmpHome2 }
-    }
-  );
-} catch { /* best-effort */ }
-
-// session-advisor uses os.homedir() which reads HOME/USERPROFILE — we can't
-// override that mid-process, so test with whatever the real homedir has.
-// The require() below loads from source (ROOT), which resolves tipsDir() at
-// call time. If ~/.claude/.coach/tips.json exists it works; if not, loadTips()
-// returns the error fallback string — still a valid string.
+// session-advisor reads tips.json from bundleRoot() (__dirname/..) — no install needed.
 
 const { getSessionAdvice } = require(path.join(ROOT, "scripts", "session-advisor.js"));
 
@@ -375,8 +359,6 @@ assert(advice.includes("\x1b["), "includes ANSI color codes");
 // With advisor disabled — should return fallback
 const advice2 = getSessionAdvice({ sessionId: "test-123", cwd: ROOT });
 assert(typeof advice2 === "string", "returns string with sessionId");
-
-fs.rmSync(tmpHome2, { recursive: true, force: true });
 
 // ─── Report ──────────────────────────────────────────────────────
 
