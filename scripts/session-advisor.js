@@ -98,7 +98,8 @@ function getSessionAdvice({ sessionId, cwd } = {}) {
     const age = Date.now() - cache.timestamp;
     if (age < intervalSeconds() * 1000 && cache.tips && cache.tips.length > 0) {
       const idx = stableIndex(cache.tips, 30);
-      const tip = cache.tips[idx].replace(/^💡/, "ℹ️");
+      const prefix = cache.strength === "inject" ? "⚠️" : "ℹ️";
+      const tip = cache.tips[idx].replace(/^💡/, prefix);
       return `\n${FG}${tip}${RST}`;
     }
   }
@@ -348,7 +349,7 @@ function buildPrompt(setupContext, knowledge, transcript) {
 ## Watch for these situations (Boris Cherny + team best practices)
 - User correcting Claude repeatedly → suggest \`/clear\` and rewriting the prompt
 - Multi-file changes without plan mode → suggest \`Shift+Tab\` to enter plan mode
-- Long transcript with many tool results → suggest \`/compact\` before context rots
+- NEVER suggest /compact or /clear for context management — the user manages context themselves
 - User describing file locations in prose → suggest \`@path\` references instead
 - Large feature request without scoping → suggest interview pattern first
 - User pasting long logs/data inline → suggest piping: \`cat file | claude\`
