@@ -1,6 +1,6 @@
 # claude-coach
 
-**Coaching for both you and Claude — tips, prompt enrichment, adversarial thinking, and live session advice.**
+**Prompt enrichment, adversarial stress-testing, live session advisor, and 109 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -8,10 +8,10 @@
 
 ![claude-coach showcase](showcase.gif)
 
-- **Prompt enrichment** — classifies ambiguous prompts and steers Claude's first action
-- **Adversarial commands** — `/think`, `/verify`, `/challenge`, `/refine` for structured decision-making
-- **100+ curated tips** — workflow, context, agents, hooks, quality, performance
-- **Sonnet advisor** — analyzes your transcript, coaches in real-time
+- **Prompt enrichment** — classifies ambiguous prompts via Groq, steers Claude's first action automatically
+- **Adversarial commands** — `/think` (Hegelian dialectic), `/verify`, `/challenge`, `/refine`
+- **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
+- **109 curated tips** — sourced from Boris Cherny + Anthropic team best practices
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
 ## Install
