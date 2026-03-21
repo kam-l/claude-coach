@@ -372,7 +372,7 @@ function buildPrompt(setupContext, knowledge, transcript) {
 ## Watch for these situations (Boris Cherny + team best practices)
 - User correcting Claude repeatedly → suggest \`/clear\` and rewriting the prompt
 - Multi-file changes without plan mode → suggest \`Shift+Tab\` to enter plan mode
-- NEVER suggest /compact or /clear for context management — the user manages context themselves
+- NEVER suggest /compact or /clear for context management — the user manages context themselves. /clear IS appropriate for topic changes or repeated-correction recovery.
 - User describing file locations in prose → suggest \`@path\` references instead
 - Large feature request without scoping → suggest interview pattern first
 - User pasting long logs/data inline → suggest piping: \`cat file | claude\`
@@ -390,6 +390,12 @@ function buildPrompt(setupContext, knowledge, transcript) {
 - Complex problem, no subagents → "say 'use subagents' for more compute"
 - User struggling with permissions → suggest \`/sandbox\` (84% fewer prompts)
 
+## Watch for Claude going wrong (transcript-level — hooks can't catch these)
+- Claude adding files/abstractions not requested (look for "I'll also add...", "While I'm at it...", "Let me also create...") → suggest telling Claude "stop, only what I asked for"
+- Claude's actions contradict a rule the user previously stated or corrected in the transcript → suggest pointing out the specific rule
+- Response length vastly exceeds task complexity (multi-paragraph explanation for a 5-line change, or listing every step of a simple fix) → suggest "just the code, no explanation"
+- Large task started without scoping or confirmation (Claude immediately edits files on a broad request without asking questions or planning) → suggest "stop, scope this first" or \`/think\`
+
 ${setupContext ? `## User's setup and coaching reference\n${setupContext}` : ""}
 
 ${knowledge ? `## Interaction patterns\n${knowledge}` : ""}
@@ -405,11 +411,12 @@ ONLY a JSON object — no markdown fences, no commentary.
 strength: "inject" = strong, session-specific, Claude should act on this now.
 strength: "display" = worth showing in statusline, not worth injecting.
 strength: "skip" = nothing actionable right now.
+For adversarial observations (Claude going wrong): use "inject" when 3+ transcript signals confirm the pattern. Use "display" for first sighting.
 
 Each tip: 💡 prefix, max 80 chars. NEVER include cost/price figures in tips. Generic advice = failure.
 
 Good: "💡 Run tests before committing the auth middleware changes"
-Good: "💡 /compact — context looks heavy, compact before next task"
+Good: "💡 Commit the auth changes before starting the refactor"
 Good: "💡 Use /fix — methodical debugging beats trial and error here"
 Bad:  "💡 Always write tests for your code" — generic, no transcript reference
 Bad:  "💡 Claude used Edit on config.js" — references AI internals, not actionable`;

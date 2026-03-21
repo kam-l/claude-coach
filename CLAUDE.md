@@ -8,7 +8,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - Worker calls `claude -p --model sonnet` — the one correct `claude -p` usage (standalone, no Claude Code context)
 - `prompt-enrichment.js` calls Groq/Anthropic API directly (NOT `claude -p` — too slow for sync hooks)
 - `prompt-enrichment.js` must skip advisor prompts (starts with "Analyze a Claude Code session transcript")
-- Advisor NEVER suggests `/compact` or `/clear` — user manages context themselves
+- Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing
 - `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — scripts run from plugin cache
 - Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
