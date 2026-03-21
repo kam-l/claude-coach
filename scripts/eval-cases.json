@@ -1,0 +1,9 @@
+{"cases": [
+  {"prompt": "Refactor the auth system to use the new token format across all services", "expected": "plan", "criteria": "Multi-file architectural change — should be plan, not clarify"},
+  {"prompt": "How does the caching layer in src/cache/ interact with the API routes?", "expected": "recon", "criteria": "References unexamined code — should be recon, not clarify"},
+  {"prompt": "Update the database schema, migrate existing data, and update all the API endpoints", "expected": "plan", "criteria": "3+ subtasks — should be plan"},
+  {"prompt": "I'm not sure how the middleware chain works, maybe we should change it", "expected": "recon", "criteria": "References unexamined code with hedging — recon beats clarify"},
+  {"prompt": "What's the best approach for handling file uploads?", "expected": "probe", "criteria": "Opinion/recommendation — should be probe"},
+  {"prompt": "Fix the bug in the login form", "expected": "none", "criteria": "Clear single action — should be none"},
+  {"prompt": "# Refactoring plan\n\nWe need to restructure the component hierarchy. Maybe split the monolith into modules.", "expected": "plan", "criteria": "Markdown-formatted multi-file change — should be plan"}
+]}
