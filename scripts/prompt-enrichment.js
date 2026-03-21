@@ -9,46 +9,44 @@ const path = require("path");
 const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "enrichment-log.jsonl");
 
 // --- Directive payloads (injected as additionalContext) ---
-// 4 directives: clarify > probe > recon > plan (priority order, highest wins)
+// 4 directives: clarify > frustration > plan > recon (priority order, highest wins)
+// The 80% trio (clarify, frustration, plan) have NO exception clauses — they MUST fire.
 // Routes to plugin commands (/claude-coach:*) and built-in tools (Agent, EnterPlanMode)
 
 const DIRECTIVES = {
-  clarify: `<pre-task-instruction>
-The user's prompt has ambiguous scope or missing critical detail. Use the Skill tool to invoke /claude-coach:question with the ambiguous points as arguments.
-Exception: if the conversation context already makes the intent clear, proceed normally.
-</pre-task-instruction>`,
-  probe: `<pre-task-instruction>
-The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Use the Skill tool to invoke /claude-coach:verify with the claim or design question as the argument.
-Exception: if the user explicitly asks you to just pick, proceed with your best judgment.
-</pre-task-instruction>`,
-  recon: `<pre-task-instruction>
+  clarify: `<required_action>
+The user's prompt has ambiguous scope or missing critical detail. You MUST use the Skill tool to invoke /claude-coach:question with the ambiguous points as arguments BEFORE doing anything else. Do not proceed without clarifying first.
+</required_action>`,
+  frustration: `<required_action>
+The user's prompt signals frustration, confusion, or disagreement with prior actions. You MUST use the Skill tool to invoke /claude-coach:verify with the current discussion subject as the argument. Do not continue the previous approach — stop and verify your assumptions first.
+</required_action>`,
+  plan: `<required_action>
+The user's prompt involves 2+ files, 2+ logical steps, or any architectural decision. You MUST use the EnterPlanMode tool to outline all steps before any Edit or Write. List each subtask separately and complete sequentially.
+</required_action>`,
+  recon: `<required_action>
 The user's prompt references code you may not have examined in this conversation. Use the Agent tool with subagent_type "Explore" to survey the relevant files and summarize findings before proposing changes.
 Exception: if you have Read tool results for the specific files mentioned in this prompt, proceed normally.
-</pre-task-instruction>`,
-  plan: `<pre-task-instruction>
-The user's prompt involves multiple files, subtasks, or architectural changes. Use the EnterPlanMode tool to outline all steps before any Edit or Write. If the prompt contains distinct subtasks, list them separately and complete sequentially.
-Exception: if you have already surveyed the scope and it is a single focused change, proceed normally.
-</pre-task-instruction>`,
+</required_action>`,
 };
 
 // --- Classifier system prompt ---
 // Calibrated for llama-3.1-8b-instant on pre-filtered prompts
 // (the local gate already removed trivially clear prompts)
 
-const SYSTEM_PROMPT = `You are a routing classifier for a Claude Code agent. The user's prompt has already been pre-screened and passed because it contains complexity signals (hedging, questions, multiple sentences, or broad scope). Your job is to select the best behavioral directive, or none if the prompt is clear despite its surface complexity.
+const SYSTEM_PROMPT = `You are a routing classifier for a Claude Code agent. The user's prompt has already been pre-screened and passed because it contains complexity signals. Your job is to select the best behavioral directive. Prefer selecting a directive over "none" — when in doubt, select one.
 
 Your entire response must be exactly one JSON object and nothing else.
 Valid format: {"directive": "key"} or {"directive": "none"}
 Do not include any explanation, preamble, markdown formatting, or text outside the JSON.
 
 Selection criteria (in priority order — when multiple apply, pick the highest):
-1. "plan" — Requires changes across multiple files, contains 3+ subtasks, or involves architecture-level decisions.
-2. "recon" — References code, files, or systems the agent hasn't examined.
-3. "clarify" — Ambiguous scope, multiple interpretations, or missing critical detail that would cause a wrong result.
-4. "probe" — Contains unstated assumptions, asks for an opinion or recommendation, or requests open-ended research/comparison.
-5. "none" — Clear and actionable despite complexity signals. The agent can proceed normally.
+1. "clarify" — Ambiguous scope, multiple interpretations, missing critical detail, or the user asks a broad question without specifying constraints.
+2. "frustration" — User shows frustration, confusion, blame, or disagreement (invectives, "why did you", "this is wrong", "not what I asked", exasperation, repeated corrections).
+3. "plan" — Involves 2+ files, 2+ logical steps, any refactoring, or architectural decisions. Even medium-complexity tasks qualify.
+4. "recon" — References code, files, or systems the agent hasn't examined.
+5. "none" — ONLY when the prompt is unambiguously a single focused change to one file with no missing information and no frustration signals.
 
-Select "none" when the prompt has a clear single action, even if phrased as a question or with hedging.`;
+Bias toward action: select a directive unless the prompt is trivially clear.`;
 
 // --- Logging ---
 
@@ -67,14 +65,24 @@ function appendLog(entry) {
   });
 }
 
+// --- Frustration fast-path (local regex, zero latency) ---
+
+function detectFrustration(prompt) {
+  // Direct invectives
+  if (/\b(wtf|wth|what the (fuck|hell|heck)|ffs|jfc|damn ?it|dammit|for fuck'?s? sake)\b/i.test(prompt)) return true;
+  // Blame/confusion directed at Claude
+  if (/\b(why did you|why are you|you (broke|ruined|messed|screwed)|stop (doing|changing|breaking)|I (told|said|asked) you)\b/i.test(prompt)) return true;
+  // Exasperation / repeated-correction signals
+  if (/\b(again\?|still (broken|wrong|not)|not what I (asked|wanted|meant)|this is wrong|that'?s wrong|no no no|undo (that|this|it)|revert (that|this|it))(?=\W|$)/i.test(prompt)) return true;
+  return false;
+}
+
 // --- Local gate ---
 
 function shouldSkip(prompt) {
   const tokens = prompt.trim().split(/\s+/);
   if (tokens.length < 5) return true;
-  if (/^\//.test(prompt.trim())) return true;
-  if (/^Analyze a Claude Code session transcript/i.test(prompt.trim())) return true;
-  if (/^<task-notification>/i.test(prompt.trim())) return true;
+  // Slash commands, advisor prompts, task notifications already handled before frustration fast-path
   if (/^(y|n|yes|no|ok|done|looks good|lgtm|continue|sure|go ahead|ship it)\b/i.test(prompt.trim())) return true;
 
   const sentenceBoundaries = prompt.split(/[.!?]\s+[A-Z]/).length;
@@ -179,7 +187,24 @@ function buildAnthropicRequest(apiKey, prompt) {
   const prompt = data.prompt || "";
   if (!prompt) process.exit(0);
 
-  // Local gate
+  // Always skip advisor prompts and slash commands
+  if (/^\//.test(prompt.trim())) process.exit(0);
+  if (/^Analyze a Claude Code session transcript/i.test(prompt.trim())) process.exit(0);
+  if (/^<task-notification>/i.test(prompt.trim())) process.exit(0);
+
+  // Frustration fast-path: bypass all gates, inject immediately
+  if (detectFrustration(prompt)) {
+    appendLog({ ts: new Date().toISOString(), prompt_preview: prompt.slice(0, 80), directive: "frustration", provider: "local" });
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "UserPromptSubmit",
+        additionalContext: DIRECTIVES.frustration,
+      },
+    }));
+    process.exit(0);
+  }
+
+  // Normal local gate (non-frustration prompts)
   if (shouldSkip(prompt)) process.exit(0);
   if (!shouldPass(prompt)) process.exit(0);
 

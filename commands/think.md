@@ -3,7 +3,7 @@ description: Thesis/antithesis/synthesis dialectic
 argument-hint: [claim-or-design-to-challenge]
 ---
 
-# Steps
+<workflow>
 
 1. Ultrathink on $ARGUMENTS. Decompose into:
    - **Claims**: Every debatable assertion, implicit or explicit. Restate each as a clear, single-sentence thesis.
@@ -11,7 +11,7 @@ argument-hint: [claim-or-design-to-challenge]
    If only one claim -> proceed to step 2.
    If multiple claims -> `AskUserQuestion`: present the numbered list of extracted claims. Let the user pick which to dialectic (one, several, or all). Then run step 2 for each selected claim sequentially.
 
-2. Create an agent team with two teammates for adversarial debate:
+2. Create an agent **TEAM** with two teammates for adversarial debate:
    - **Thesis advocate** (defender):
      > You are the thesis advocate. Your job: build the strongest possible case FOR this claim: "{thesis}". Read these files for context: {extracted file paths, or omit if none}.
      >
@@ -34,6 +34,12 @@ argument-hint: [claim-or-design-to-challenge]
 4. Clean up the team.
 
 5. `AskUserQuestion` with the synthesis, key tensions, and decision points for the user to weigh in on.
+   
+<workflow>
 
-# Done
-`AskUserQuestion` delivered with synthesis, tensions, and decision points.
+<constraints>
+
+- NEVER spawn agents outside of a team
+- `attacker` and `defender` agents **MUST** be spawned inside a **TEAM**
+  
+</constraints>

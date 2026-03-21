@@ -1,9 +1,19 @@
 {"cases": [
-  {"prompt": "Refactor the auth system to use the new token format across all services", "expected": "plan", "criteria": "Multi-file architectural change — should be plan, not clarify"},
-  {"prompt": "How does the caching layer in src/cache/ interact with the API routes?", "expected": "recon", "criteria": "References unexamined code — should be recon, not clarify"},
+  {"prompt": "Refactor the auth system to use the new token format across all services", "expected": "plan", "criteria": "Multi-file change — should be plan"},
+  {"prompt": "Trace how src/cache/ connects to the API routes and summarize the dependency chain", "expected": "recon", "criteria": "References unexamined code, no question mark — should be recon, not clarify"},
   {"prompt": "Update the database schema, migrate existing data, and update all the API endpoints", "expected": "plan", "criteria": "3+ subtasks — should be plan"},
-  {"prompt": "I'm not sure how the middleware chain works, maybe we should change it", "expected": "recon", "criteria": "References unexamined code with hedging — recon beats clarify"},
-  {"prompt": "What's the best approach for handling file uploads?", "expected": "probe", "criteria": "Opinion/recommendation — should be probe"},
-  {"prompt": "Fix the bug in the login form", "expected": "none", "criteria": "Clear single action — should be none"},
-  {"prompt": "# Refactoring plan\n\nWe need to restructure the component hierarchy. Maybe split the monolith into modules.", "expected": "plan", "criteria": "Markdown-formatted multi-file change — should be plan"}
+  {"prompt": "I'm not sure how the middleware chain works, maybe we should change it", "expected": "clarify", "criteria": "Ambiguous scope with hedging — should be clarify (question the user)"},
+  {"prompt": "What's the best approach for handling file uploads?", "expected": "clarify", "criteria": "Broad question without constraints — should be clarify"},
+  {"prompt": "Add a comment above the parseToken function explaining what it does", "expected": "none", "criteria": "Single file, clear scope, no ambiguity — should be none (gate-filtered by shouldSkip)"},
+  {"prompt": "# Refactoring plan\n\nWe need to restructure the component hierarchy. Maybe split the monolith into modules.", "expected": "plan", "criteria": "Markdown-formatted multi-file change — should be plan"},
+  {"prompt": "wtf why did you delete my test file", "expected": "frustration", "criteria": "Invective + blame — frustration fast-path should catch this"},
+  {"prompt": "this is wrong again, I told you to keep the original interface", "expected": "frustration", "criteria": "Exasperation + repeated correction — frustration fast-path"},
+  {"prompt": "Why did you change the return type? That broke the whole API", "expected": "frustration", "criteria": "Blame directed at Claude — frustration fast-path"},
+  {"prompt": "not what I wanted, the sidebar should stay fixed position", "expected": "frustration", "criteria": "Disagreement with prior action — frustration fast-path"},
+  {"prompt": "I think we should change the button color to red. Also update the header font to match the new brand guidelines.", "expected": "plan", "criteria": "2 sentences, 2 steps — passes shouldPass gate, should be plan"},
+  {"prompt": "Should we use Redis or Memcached for the session store? I'm not sure which fits our latency requirements.", "expected": "clarify", "criteria": "Open-ended question with hedging — should clarify constraints first"},
+  {"prompt": "Add error handling to the API routes and write tests for them", "expected": "plan", "criteria": "2+ steps — should be plan"},
+  {"prompt": "ffs stop changing that file, revert it", "expected": "frustration", "criteria": "Invective + revert request — frustration fast-path"},
+  {"prompt": "Look at how the handleAuth middleware interacts with the session store before changing anything", "expected": "recon", "criteria": "References unexamined code with instruction to survey first — should be recon"},
+  {"prompt": "Rename the getUserById function to fetchUser", "expected": "none", "criteria": "Single file, single clear action — should be none (gate-filtered by shouldSkip)"}
 ]}
