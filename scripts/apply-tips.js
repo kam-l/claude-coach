@@ -65,50 +65,9 @@ if (fs.existsSync(settingsPath)) {
   settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 }
 
-// --- Generate project-specific tips ---
+// --- Generate tips from commands/skills ---
 
-let projectTips = [];
-let projectName = null;
-
-if (projectDir) {
-  projectName = path.basename(projectDir);
-  const suffix = `[${projectName}]`;
-
-  // Scan project commands
-  const commandDirs = [path.join(projectDir, ".claude", "commands")];
-  for (const file of findMdFiles(commandDirs)) {
-    const content = safeRead(file);
-    if (!content) continue;
-    const fm = extractFrontmatter(content);
-    const name = path.basename(file, ".md");
-    const desc = fm.description || content.split("\n")[0].replace(/^#\s*/, "");
-    if (desc) {
-      projectTips.push(formatProjectTip(name, desc, suffix));
-    }
-  }
-
-  // Scan project skills (user-invocable only)
-  const skillDirs = [
-    path.join(projectDir, ".claude", "skills"),
-    path.join(projectDir, "skills"),
-  ];
-  const seen = new Set();
-  for (const file of findFiles(skillDirs, "SKILL.md")) {
-    const content = safeRead(file);
-    if (!content) continue;
-    const name = path.basename(path.dirname(file));
-    if (seen.has(name)) continue;
-    seen.add(name);
-    const fm = extractFrontmatter(content);
-    if (fm["user-invocable"] === "false") continue;
-    const desc = fm.description || "";
-    if (desc) {
-      projectTips.push(formatProjectTip(name, desc, suffix));
-    }
-  }
-}
-
-function formatProjectTip(name, description, suffix) {
+function formatTip(name, description, suffix) {
   // Strip trigger lists from description (everything after ". Triggers:" or similar)
   let desc = description
     .replace(/\.\s*Triggers?:.*$/i, "")
@@ -118,11 +77,65 @@ function formatProjectTip(name, description, suffix) {
   if (desc.endsWith(".")) desc = desc.slice(0, -1);
   // Build tip and truncate to 80 chars
   const prefix = `💡 /${name} — `;
-  const maxDesc = 80 - prefix.length - suffix.length - 2; // 2 for " " before suffix
+  const suffixPart = suffix ? ` ${suffix}` : "";
+  const maxDesc = 80 - prefix.length - suffixPart.length;
   if (desc.length > maxDesc) {
     desc = desc.slice(0, maxDesc - 1).replace(/\s+\S*$/, "") + "…";
   }
-  return `${prefix}${desc} ${suffix}`;
+  return `${prefix}${desc}${suffixPart}`;
+}
+
+function scanTips(commandDirs, skillDirs, suffix, seenNames) {
+  const tips = [];
+
+  for (const file of findMdFiles(commandDirs)) {
+    const content = safeRead(file);
+    if (!content) continue;
+    const name = path.basename(file, ".md");
+    if (seenNames.has(name)) continue;
+    seenNames.add(name);
+    const fm = extractFrontmatter(content);
+    const desc = fm.description || content.split("\n")[0].replace(/^#\s*/, "");
+    if (desc) tips.push(formatTip(name, desc, suffix));
+  }
+
+  for (const file of findFiles(skillDirs, "SKILL.md")) {
+    const content = safeRead(file);
+    if (!content) continue;
+    const name = path.basename(path.dirname(file));
+    if (seenNames.has(name)) continue;
+    seenNames.add(name);
+    const fm = extractFrontmatter(content);
+    if (fm["user-invocable"] === "false") continue;
+    const desc = fm.description || "";
+    if (desc) tips.push(formatTip(name, desc, suffix));
+  }
+
+  return tips;
+}
+
+const claudeHome = path.join(os.homedir(), ".claude");
+const seenNames = new Set();
+
+// Global (user-scope) commands/skills — no suffix
+const globalTips = scanTips(
+  [path.join(claudeHome, "commands")],
+  [path.join(claudeHome, "skills")],
+  null,
+  seenNames,
+);
+
+// Project-specific commands/skills — [ProjectName] suffix
+let projectTips = [];
+let projectName = null;
+if (projectDir) {
+  projectName = path.basename(projectDir);
+  projectTips = scanTips(
+    [path.join(projectDir, ".claude", "commands"), path.join(projectDir, "commands")],
+    [path.join(projectDir, ".claude", "skills"), path.join(projectDir, "skills")],
+    `[${projectName}]`,
+    seenNames,
+  );
 }
 
 // --- Merge ---
@@ -130,7 +143,10 @@ function formatProjectTip(name, description, suffix) {
 // 1. Start with existing tips
 let existing = settings.spinnerTipsOverride?.tips || [];
 
-// 2. Strip stale project tips for THIS project only (never touch other projects)
+// 2. Strip stale generated tips (global + this project only, never touch other projects)
+//    Global tips have no suffix — match by "💡 /{name} —" prefix against globalTips
+const globalPrefixes = new Set(globalTips.map(t => t.toLowerCase().slice(0, 40)));
+existing = existing.filter(t => !globalPrefixes.has(t.toLowerCase().slice(0, 40)));
 if (projectName) {
   const thisSuffix = `[${projectName}]`;
   existing = existing.filter(t => !t.endsWith(thisSuffix));
@@ -140,19 +156,23 @@ if (projectName) {
 const existingLower = new Set(existing.map(t => t.toLowerCase().slice(0, 40)));
 const newCurated = curated.filter(t => !existingLower.has(t.toLowerCase().slice(0, 40)));
 
-// 4. Combine: existing + new curated + project tips
-const finalTips = [...existing, ...newCurated, ...projectTips];
+// 4. Combine: existing + new curated + global + project tips
+const generatedTips = [...globalTips, ...projectTips];
+const finalTips = [...existing, ...newCurated, ...generatedTips];
 
 settings.spinnerTipsEnabled = true;
 settings.spinnerTipsOverride = {
   tips: finalTips,
-  excludeDefault: true
 };
 
 if (dryRun) {
   console.log(`Would add ${newCurated.length} curated tips (${existing.length} existing)`);
   if (newCurated.length > 0) {
     console.log("New curated:", JSON.stringify(newCurated, null, 2));
+  }
+  if (globalTips.length > 0) {
+    console.log(`Would add ${globalTips.length} global tips:`);
+    for (const t of globalTips) console.log("  " + t);
   }
   if (projectTips.length > 0) {
     console.log(`Would add ${projectTips.length} project tips [${projectName}]:`);
@@ -161,6 +181,6 @@ if (dryRun) {
   console.log(`Total would be: ${finalTips.length} tips`);
 } else {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
-  console.log(`Added ${newCurated.length} curated + ${projectTips.length} project tips to ${settingsPath}`);
+  console.log(`Added ${newCurated.length} curated + ${globalTips.length} global + ${projectTips.length} project tips to ${settingsPath}`);
   console.log(`Total: ${finalTips.length} tips`);
 }

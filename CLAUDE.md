@@ -21,7 +21,8 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - `/init` — full first-time setup (spinner + runtime + advisor)
 - `/tips [list|add|refresh]` — manage tips: list all, add custom, or refresh (curated + project-specific)
 - `/uninstall` — remove all claude-coach traces
-- Project tips: `apply-tips.js --project-dir` scans project commands/skills, generates `💡 /{name} — {desc} [Project]` suffix tips
+- Project tips: `apply-tips.js --project-dir` scans `.claude/commands/`, `commands/`, `.claude/skills/`, `skills/` — generates `💡 /{name} — {desc} [Project]` suffix tips
+- After adding/changing commands: run `/tips refresh` to surface them as spinner tips
 - Shared helpers in `scripts/helpers.js` — `extractFrontmatter`, `findFiles`, `safeRead`, `safeJSON`
 
 ## Conventions
