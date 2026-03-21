@@ -3,9 +3,10 @@
 **Prompt enrichment, adversarial stress-testing, live session advisor, and 109 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
-[![npm version](https://img.shields.io/npm/v/@kam-l/claude-coach)](https://www.npmjs.com/package/@kam-l/claude-coach)
-[![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
 [![tips](https://img.shields.io/badge/tips-109%20curated-orange)](tips.json)
+[![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
+[![version](https://img.shields.io/github/v/tag/kam-l/claude-coach?label=version&color=green)](https://github.com/kam-l/claude-coach/releases)
+[![npm](https://img.shields.io/npm/v/@kam-l/claude-coach)](https://www.npmjs.com/package/@kam-l/claude-coach)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 <img src="xzibit.png" alt="Yo dawg, I heard you like Claude" width="300">
