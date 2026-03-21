@@ -50,21 +50,18 @@ if (binScript) {
   assert(binContent.startsWith("#!/usr/bin/env node"), "bin script has shebang");
 }
 
-// ─── Wiring: SKILL.md ───────────────────────────────────────────
+// ─── Wiring: commands ────────────────────────────────────────────
 
-describe("SKILL.md");
+describe("commands");
 
-const skillPath = path.join(ROOT, "skills", "tips", "SKILL.md");
-const skill = fs.readFileSync(skillPath, "utf-8");
-assert(skill.includes("description:"), "has description frontmatter");
-assert(skill.includes("init"), "routes init");
-assert(skill.includes("refresh"), "routes refresh");
-assert(skill.includes("list"), "routes list");
-assert(skill.includes("add"), "routes add");
+assert(fs.existsSync(path.join(ROOT, "commands", "init.md")), "commands/init.md exists");
+assert(fs.existsSync(path.join(ROOT, "commands", "tips.md")), "commands/tips.md exists");
+assert(fs.existsSync(path.join(ROOT, "commands", "uninstall.md")), "commands/uninstall.md exists");
 
-// Check workflows exist for routed paths
-assert(fs.existsSync(path.join(ROOT, "skills", "tips", "workflows", "init.md")), "init.md exists");
-assert(fs.existsSync(path.join(ROOT, "skills", "tips", "workflows", "refresh.md")), "refresh.md exists");
+const tipsCmd = fs.readFileSync(path.join(ROOT, "commands", "tips.md"), "utf-8");
+assert(tipsCmd.includes("list"), "tips command routes list");
+assert(tipsCmd.includes("add"), "tips command routes add");
+assert(tipsCmd.includes("refresh"), "tips command routes refresh");
 
 // ─── Wiring: npm pack contents ───────────────────────────────────
 
@@ -74,7 +71,7 @@ try {
   const packOutput = execSync("npm pack --dry-run 2>&1", {
     encoding: "utf-8", cwd: ROOT, timeout: 10000
   });
-  assert(packOutput.includes("skills/tips/SKILL.md"), "pack includes SKILL.md");
+  assert(packOutput.includes("commands/tips.md"), "pack includes commands/tips.md");
   assert(packOutput.includes(".claude-plugin/plugin.json"), "pack includes plugin.json");
   assert(packOutput.includes("scripts/session-advisor.js"), "pack includes session-advisor.js");
   assert(packOutput.includes("scripts/install-statusline.js"), "pack includes install-statusline.js");
@@ -105,16 +102,11 @@ for (const [cat, tips] of Object.entries(tipsDb.categories)) {
 const totalTips = Object.values(tipsDb.categories).flat().length;
 assert(totalTips > 0, `has tips (${totalTips} total)`);
 
-// ─── Unit: scan.js extractFrontmatter ────────────────────────────
+// ─── Unit: helpers.js extractFrontmatter ─────────────────────────
 
-describe("extractFrontmatter (scan.js)");
+describe("extractFrontmatter (helpers.js)");
 
-// Load scan.js as a string and extract the function via eval in a sandbox
-// (scan.js doesn't export it, so we test via the script's behavior)
-const scanSrc = fs.readFileSync(path.join(ROOT, "scripts", "scan.js"), "utf-8");
-const extractFn = new Function(
-  "return " + scanSrc.match(/function extractFrontmatter[\s\S]*?^}/m)[0]
-)();
+const { extractFrontmatter: extractFn } = require(path.join(ROOT, "scripts", "helpers"));
 
 assert(
   extractFn('---\nname: foo\n---\nbody').name === "foo",

@@ -74,6 +74,7 @@ function shouldSkip(prompt) {
   if (tokens.length < 5) return true;
   if (/^[*/#]/.test(prompt.trim())) return true;
   if (/^Analyze a Claude Code session transcript/i.test(prompt.trim())) return true;
+  if (/^<task-notification>/i.test(prompt.trim())) return true;
   if (/^(y|n|yes|no|ok|done|looks good|lgtm|continue|sure|go ahead|ship it)\b/i.test(prompt.trim())) return true;
 
   const sentenceBoundaries = prompt.split(/[.!?]\s+[A-Z]/).length;

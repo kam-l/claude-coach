@@ -13,69 +13,14 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { spawnSync } = require("child_process");
+const { safeJSON, extractFrontmatter, findFiles } = require("./helpers");
 
 const home = os.homedir();
 const claudeHome = path.join(home, ".claude");
 const projectDir = process.env.CLAUDE_PROJECT_ROOT || process.cwd();
 const dest = path.join(claudeHome, "plugins", "claude-coach", "setup-context.md");
 
-// --- Helpers ---
-
-function safeJSON(filePath) {
-  try { return JSON.parse(fs.readFileSync(filePath, "utf-8")); } catch { return null; }
-}
-
-function walkFiles(dir, matchFn) {
-  const found = [];
-  function walk(d) {
-    try {
-      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-        const full = path.join(d, entry.name);
-        if (entry.isDirectory()) walk(full);
-        else if (entry.isFile() && matchFn(entry.name)) found.push(full);
-      }
-    } catch {}
-  }
-  try { if (fs.existsSync(dir)) walk(dir); } catch {}
-  return found;
-}
-
-function extractFrontmatter(filePath) {
-  try {
-    const content = fs.readFileSync(filePath, "utf-8").replace(/\r\n/g, "\n");
-    const match = content.match(/^---\n([\s\S]*?)\n---/);
-    if (!match) {
-      return { description: content.split("\n")[0].replace(/^#\s*/, "") };
-    }
-    const fm = {};
-    let currentKey = null;
-    let multiLine = false;
-    for (const line of match[1].split("\n")) {
-      if (currentKey && multiLine) {
-        if (/^\s/.test(line) || /^["']/.test(line.trim())) {
-          fm[currentKey] += " " + line.trim().replace(/["']$/g, "");
-          if (/["']$/.test(line.trim())) { currentKey = null; multiLine = false; }
-          continue;
-        }
-        currentKey = null; multiLine = false;
-      }
-      const sep = line.indexOf(":");
-      if (sep > 0) {
-        const key = line.slice(0, sep).trim();
-        let val = line.slice(sep + 1).trim();
-        if (/^["']/.test(val) && /["']$/.test(val)) {
-          fm[key] = val.slice(1, -1);
-        } else if (/^["']/.test(val)) {
-          fm[key] = val.slice(1);
-          currentKey = key; multiLine = true;
-        } else {
-          fm[key] = val;
-        }
-      }
-    }
-    return fm;
-  } catch { return {}; }
-}
+// --- Helpers (script-specific) ---
 
 function resolveClaudePath() {
   const cmd = process.platform === "win32" ? "where" : "which";
@@ -98,9 +43,10 @@ const commandDirs = [
   path.join(projectDir, ".claude", "commands"),
 ];
 for (const dir of commandDirs) {
-  for (const file of walkFiles(dir, n => n.endsWith(".md"))) {
+  for (const file of findFiles([dir], "*.md")) {
     const name = path.basename(file, ".md");
-    const fm = extractFrontmatter(file);
+    const content = fs.readFileSync(file, "utf-8").replace(/\r\n/g, "\n");
+    const fm = extractFrontmatter(content);
     commands.push({ name: `/${name}`, description: fm.description || "" });
   }
 }
@@ -115,11 +61,12 @@ const skillDirs = [
   path.join(projectDir, "skills"),
 ];
 for (const dir of skillDirs) {
-  for (const file of walkFiles(dir, n => n === "SKILL.md")) {
+  for (const file of findFiles([dir], "SKILL.md")) {
     const name = path.basename(path.dirname(file));
     if (seen.has(name)) continue;
     seen.add(name);
-    const fm = extractFrontmatter(file);
+    const content = fs.readFileSync(file, "utf-8").replace(/\r\n/g, "\n");
+    const fm = extractFrontmatter(content);
     if (fm["user-invocable"] === "false") continue;
     skills.push({ name, description: fm.description || "" });
   }

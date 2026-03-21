@@ -16,8 +16,17 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (seconds, default 900)
 - Env vars: `GROQ_API_KEY` (prompt enrichment, free), `ANTHROPIC_API_KEY` (fallback, paid)
 
+## Commands (formerly skills/tips routing)
+
+- `/init` — full first-time setup (spinner + runtime + advisor)
+- `/tips [list|add|refresh]` — manage tips: list all, add custom, or refresh (curated + project-specific)
+- `/uninstall` — remove all claude-coach traces
+- Project tips: `apply-tips.js --project-dir` scans project commands/skills, generates `💡 /{name} — {desc} [Project]` suffix tips
+- Shared helpers in `scripts/helpers.js` — `extractFrontmatter`, `findFiles`, `safeRead`, `safeJSON`
+
 ## Conventions
 
 - Tips: `💡` prefix, max 80 chars, format "Use /X to Y" or "When X, try Y"
+- Project-specific tips: `[ProjectName]` suffix (basename of project dir)
 - `tips.json` shape: `{ version, categories: { [name]: string[] } }` — flat string arrays per category
 - Hooks fail-open: never block the user's prompt on error or missing config

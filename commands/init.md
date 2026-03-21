@@ -10,12 +10,12 @@ One-time setup: apply curated tips to spinner, mine setup context, wire Sonnet s
 
 Preview first:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/apply-tips.js" --dry-run
+node "${CLAUDE_PLUGIN_ROOT}/scripts/apply-tips.js" --project-dir "${CLAUDE_PROJECT_ROOT:-$(pwd)}" --dry-run
 ```
 
 `AskUserQuestion` with the dry-run output. After confirm:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/apply-tips.js"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/apply-tips.js" --project-dir "${CLAUDE_PROJECT_ROOT:-$(pwd)}"
 ```
 
 ## 2a. Install runtime files
