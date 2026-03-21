@@ -50,26 +50,29 @@ Set as system environment variables. Without either key, prompt enrichment is si
 Classifies ambiguous user prompts via Groq and routes Claude to the right workflow before it starts working:
 
 ```
-User prompt → frustration? ──yes──→ /verify (immediate)
-                  │no
+User prompt → skip? (slash cmd, advisor, short) → exit
+                  │ no
+                  ▼
+              frustration? ──yes──→ /verify (immediate, no API call)
+                  │ no
                   ▼
               local gate → Groq classifier
                                 │
                 ┌───────┬───────┼───────┐
                 ▼       ▼       ▼       ▼
-             clarify  plan    recon   none
+             clarify   plan   recon   none
                 │       │       │
                 ▼       ▼       ▼
-          /question  PlanMode  Agent
-                              (Explore)
+       /question  EnterPlanMode  Agent
+                                (Explore)
 ```
 
 | Directive | Routes to | When |
 |-----------|----------|------|
-| `clarify` | `/claude-coach:question` | Ambiguous scope, missing detail |
-| `frustration` | `/claude-coach:verify` | User frustration, blame, disagreement — auto-escalates to challenge, refine, or think |
-| `plan` | EnterPlanMode | 2+ files, 2+ steps, architecture |
-| `recon` | Agent (Explore) | References unexamined code |
+| `clarify` | `question` | Ambiguous scope, missing detail |
+| `frustration` | `verify` | User frustration, blame, disagreement — auto-escalates |
+| `plan` | `EnterPlanMode` | 2+ files, 2+ steps, architecture |
+| `recon` | `Agent (Explore)` | References unexamined code |
 
 The local gate skips trivial prompts (short commands, confirmations, slash commands) with zero latency. Only hedging, vague, multi-sentence, or broad-scope prompts reach the classifier (~250ms via Groq free tier).
 
@@ -135,7 +138,7 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 | `CLAUDE_COACH_INTERVAL` | `900` | Seconds between advisor cycles |
 | `CLAUDE_COACH_COSTS` | `0` | Show advisor cost in statusline (`[$0.05]`) |
 | `GROQ_API_KEY` | — | Prompt enrichment via Groq (free tier, ~250ms) |
-| `ANTHROPIC_API_KEY` | — | Prompt enrichment fallback via Haiku (~$1/month) |
+| `ANTHROPIC_API_KEY` | — | Prompt enrichment fallback via Haiku 4.5 |
 
 Set API keys as **system environment variables**, not in settings.json.
 
@@ -155,21 +158,15 @@ Or run `/claude-coach:setup install` for guided setup — it wires all of this a
 | Quality | 22 | "Grill me — no PR until I pass", prototype > PRD, Explanatory output style |
 | Performance | 18 | `/sandbox` (84% fewer prompts), voice dictation, Opus with thinking |
 
-## All Commands
+## User-Facing Commands
 
-| Command | What it does |
-|---------|-------------|
-| `/claude-coach:setup` | Install, uninstall, refresh tips, or customize (router skill) |
-| `/claude-coach:verify` | Auto-escalating adversarial verification — routes to challenge, refine, or think |
+| Invocation | Type | What it does |
+|------------|------|-------------|
+| `/claude-coach:setup` | Skill | Install, uninstall, refresh tips, or customize |
+| `/claude-coach:verify` | Command | Auto-escalating adversarial verification |
 
-Internal (called by enrichment or /verify — not user-facing):
-
-| Command | What it does |
-|---------|-------------|
-| `question` | Batch Q&A with choices (enrichment: clarify directive) |
-| `challenge` | Single-pass adversarial stress-test |
-| `refine` | Iterative adversarial refinement loop (up to 5 rounds) |
-| `think` | Thesis/antithesis/synthesis dialectic |
+Internal (called by enrichment or `/verify` — not invoked directly):
+`question`, `challenge`, `refine`, `think`
 
 ## Sources
 
