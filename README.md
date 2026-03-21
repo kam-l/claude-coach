@@ -6,6 +6,8 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![node](https://img.shields.io/node/v/@kam-l/claude-coach)](https://nodejs.org)
 
+<img src="xzibit.png" alt="Yo dawg, I heard you like Claude" width="300">
+
 ![claude-coach showcase](showcase.gif)
 
 - **Prompt enrichment** — classifies ambiguous prompts via Groq, steers Claude's first action automatically
@@ -33,7 +35,7 @@ npm install -g @kam-l/claude-coach
 
 ```bash
 # Inside Claude Code — guided setup
-/claude-coach:tips init
+/claude-coach:init
 
 # Restart Claude Code to load changes
 ```
@@ -138,7 +140,7 @@ Set API keys as **system environment variables**, not in settings.json.
 **Advisor cost:** ~$0.10-0.18/cycle. Pro/Max users spend rate-limit budget, not dollars.
 **Enrichment cost:** Free with Groq. ~$0.001/day with Anthropic Haiku.
 
-Or run `/claude-coach:tips init` for guided setup.
+Or run `/claude-coach:init` for guided setup.
 
 ## Tip Categories
 
@@ -155,12 +157,9 @@ Or run `/claude-coach:tips init` for guided setup.
 
 | Command | What it does |
 |---------|-------------|
-| `/claude-coach:tips init` | Full setup — spinner tips + setup mining + statusline + advisor |
-| `/claude-coach:tips refresh` | Re-apply tips, re-mine setup context, update runtime |
-| `/claude-coach:tips add <tip>` | Add a custom tip |
-| `/claude-coach:tips list` | Print all tips by category |
-| `/claude-coach:tips advisor` | Configure the Sonnet session advisor |
-| `/claude-coach:tips uninstall` | Remove all traces |
+| `/claude-coach:init` | Full setup — spinner tips + setup mining + statusline + advisor |
+| `/claude-coach:tips` | List, add, or refresh tips (curated + project-specific) |
+| `/claude-coach:uninstall` | Remove all traces |
 | `/claude-coach:question` | Batch Q&A with choices |
 | `/claude-coach:think` | Thesis/antithesis/synthesis dialectic |
 | `/claude-coach:verify` | Auto-escalating adversarial verification |
