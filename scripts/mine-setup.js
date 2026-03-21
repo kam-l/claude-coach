@@ -150,7 +150,7 @@ Optimize for token efficiency: no filler, no repetition, no explanations of what
 const claudePath = resolveClaudePath();
 console.log("Mining setup context via Sonnet...");
 
-const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json", "--tools", "", "--no-chrome", "--strict-mcp-config"], {
+const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json", "--tools", "", "--no-chrome", "--strict-mcp-config", "--system-prompt", "", "--disable-slash-commands", "--no-session-persistence"], {
   input: prompt,
   timeout: 120000,
   encoding: "utf-8",

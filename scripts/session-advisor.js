@@ -228,7 +228,7 @@ function runWorker(sessionId, cwd) {
     const prompt = buildPrompt(setupContext, knowledge, transcript);
 
     // Spawn claude
-    const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json", "--tools", "", "--no-chrome", "--strict-mcp-config"], {
+    const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json", "--tools", "", "--no-chrome", "--strict-mcp-config", "--system-prompt", "", "--disable-slash-commands", "--no-session-persistence"], {
       input: prompt,
       timeout: 60000,
       encoding: "utf-8",
