@@ -6,7 +6,6 @@
 [![tips](https://img.shields.io/badge/tips-112%20curated-orange)](tips.json)
 [![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
 [![version](https://img.shields.io/github/v/tag/kam-l/claude-coach?label=version&color=green)](https://github.com/kam-l/claude-coach/releases)
-[![npm](https://img.shields.io/npm/v/@kam-l/claude-coach)](https://www.npmjs.com/package/@kam-l/claude-coach)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 <img src="xzibit.png" alt="Yo dawg, I heard you like Claude" width="300">
@@ -25,14 +24,6 @@
 claude plugin marketplace add kam-l/claude-coach
 claude plugin install claude-coach
 ```
-
-<details>
-<summary>Alternative: npm</summary>
-
-```bash
-npm install -g @kam-l/claude-coach
-```
-</details>
 
 **Prompt enrichment requires one of:**
 - `GROQ_API_KEY` (free — [console.groq.com](https://console.groq.com)) — recommended

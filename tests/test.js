@@ -38,17 +38,9 @@ const packageJson = JSON.parse(
   fs.readFileSync(path.join(ROOT, "package.json"), "utf-8")
 );
 assert(packageJson.version === pluginJson.version, "version matches plugin.json");
-assert(Array.isArray(packageJson.files), "has files array");
-assert(packageJson.files.includes("scripts/"), "files includes scripts/");
-assert(packageJson.files.includes("skills/"), "files includes skills/");
-assert(packageJson.files.includes(".claude-plugin/"), "files includes .claude-plugin/");
-
-const binScript = packageJson.bin && packageJson.bin["claude-coach"];
-assert(!!binScript, "bin entry exists");
-if (binScript) {
-  const binContent = fs.readFileSync(path.join(ROOT, binScript), "utf-8");
-  assert(binContent.startsWith("#!/usr/bin/env node"), "bin script has shebang");
-}
+assert(packageJson.private === true, "package is private (no npm publishing)");
+assert(!packageJson.bin, "no bin entry (npm path removed)");
+assert(!packageJson.files, "no files array (npm path removed)");
 
 // ─── Wiring: commands ────────────────────────────────────────────
 
@@ -63,23 +55,15 @@ assert(tipsCmd.includes("list"), "tips command routes list");
 assert(tipsCmd.includes("add"), "tips command routes add");
 assert(tipsCmd.includes("refresh"), "tips command routes refresh");
 
-// ─── Wiring: npm pack contents ───────────────────────────────────
+// ─── Wiring: plugin file structure ───────────────────────────────
 
-describe("npm pack contents");
+describe("plugin file structure");
 
-try {
-  const packOutput = execSync("npm pack --dry-run 2>&1", {
-    encoding: "utf-8", cwd: ROOT, timeout: 10000
-  });
-  assert(packOutput.includes("commands/tips.md"), "pack includes commands/tips.md");
-  assert(packOutput.includes(".claude-plugin/plugin.json"), "pack includes plugin.json");
-  assert(packOutput.includes("scripts/session-advisor.js"), "pack includes session-advisor.js");
-  assert(packOutput.includes("scripts/install-statusline.js"), "pack includes install-statusline.js");
-  assert(!packOutput.includes("eval-cases"), "pack excludes eval-cases");
-  assert(!packOutput.includes("tips_candidates"), "pack excludes tips_candidates");
-} catch (e) {
-  assert(false, "npm pack --dry-run failed: " + (e.message || "").slice(0, 100));
-}
+assert(fs.existsSync(path.join(ROOT, ".claude-plugin", "plugin.json")), "plugin.json exists");
+assert(fs.existsSync(path.join(ROOT, "scripts", "session-advisor.js")), "session-advisor.js exists");
+assert(fs.existsSync(path.join(ROOT, "scripts", "install-statusline.js")), "install-statusline.js exists");
+assert(fs.existsSync(path.join(ROOT, "hooks", "hooks.json")), "hooks.json exists");
+assert(!fs.existsSync(path.join(ROOT, "scripts", "postinstall.js")), "no postinstall.js (npm path removed)");
 
 // ─── Unit: tips.json schema ──────────────────────────────────────
 

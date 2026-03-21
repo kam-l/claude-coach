@@ -63,13 +63,7 @@ If that fails, remove manually:
 - Remove claude-coach entries from `~/.claude/plugins/installed_plugins.json`
 - Remove claude-coach entries from `enabledPlugins` in `~/.claude/settings.json`
 
-## 7. Uninstall npm package (if present)
-
-```bash
-npm uninstall -g @kam-l/claude-coach 2>/dev/null; echo "done"
-```
-
-## 8. Verify — adversarial sweep
+## 7. Verify — adversarial sweep
 
 Spawn an `adversary` agent to verify the uninstall is complete:
 
@@ -79,12 +73,11 @@ Spawn an `adversary` agent to verify the uninstall is complete:
 > 3. `~/.claude/plugins/claude-coach/` — does not exist
 > 4. `~/.claude/.coach/` — does not exist
 > 5. `~/.claude/statusline-tips.js` — does not exist
-> 6. `npm list -g @kam-l/claude-coach` — not installed
 >
 > Report any remaining traces as CRITICAL findings. Output `Result: PASS` if clean.
 
 If the adversary finds traces, fix them and re-run until `PASS`.
 
-## 9. Confirm
+## 8. Confirm
 
 Tell the user: **Restart Claude Code** to complete removal. Spinner will revert to default tips.

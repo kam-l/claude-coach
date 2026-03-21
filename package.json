@@ -1,15 +1,10 @@
 {
-  "name": "@kam-l/claude-coach",
+  "name": "claude-coach",
   "version": "4.4.0",
+  "private": true,
   "description": "Prompt enrichment, adversarial stress-testing, and 112 curated tips for Claude Code",
-  "bin": {
-    "claude-coach": "scripts/apply-tips.js"
-  },
   "scripts": {
-    "postinstall": "node scripts/postinstall.js",
-    "test": "node tests/test.js",
-    "local-install": "node -e \"const{execSync:r}=require('child_process'),f=r('npm pack').toString().trim();r('npm i -g '+f,{stdio:'inherit'});require('fs').unlinkSync(f)\"",
-    "local-uninstall": "npm uninstall -g @kam-l/claude-coach"
+    "test": "node tests/test.js"
   },
   "author": {
     "name": "kam-l"
@@ -17,27 +12,9 @@
   "engines": {
     "node": ">=18"
   },
-  "keywords": [
-    "claude-code",
-    "spinner",
-    "tips",
-    "tooltips",
-    "dx",
-    "developer-experience"
-  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kam-l/claude-coach.git"
-  },
-  "files": [
-    "scripts/",
-    "skills/",
-    "hooks/",
-    "commands/",
-    "agents/",
-    "references/",
-    "tips.json",
-    ".claude-plugin/"
-  ]
+  }
 }
