@@ -319,9 +319,9 @@ try {
       env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, HOME: tmpHome, USERPROFILE: tmpHome }
     }
   );
-  assert(installResult.includes("runtime files installed"), "reports success");
-  assert(fs.existsSync(path.join(tmpTipsDir, "statusline-tips.js")), "copied statusline-tips.js");
-  assert(fs.existsSync(path.join(tmpTipsDir, "session-advisor.js")), "copied session-advisor.js");
+  assert(installResult.includes("runtime dir ready"), "reports success");
+  assert(!fs.existsSync(path.join(tmpTipsDir, "statusline-tips.js")), "does NOT copy statusline-tips.js (runs from cache)");
+  assert(!fs.existsSync(path.join(tmpTipsDir, "session-advisor.js")), "does NOT copy session-advisor.js (runs from cache)");
   assert(!fs.existsSync(path.join(tmpTipsDir, "tips.json")), "does NOT copy tips.json (read from bundle)");
   assert(!fs.existsSync(path.join(tmpTipsDir, "claude-usage.md")), "does NOT copy claude-usage.md (read from bundle)");
   assert(fs.existsSync(path.join(tmpTipsDir, "version.json")), "wrote version.json");
