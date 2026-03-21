@@ -194,7 +194,7 @@ try {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, output);
   const tokens = Math.ceil(output.length / 4);
-  const costStr = envelope?.total_cost_usd ? ` [$${envelope.total_cost_usd.toFixed(4)}]` : "";
+  const costStr = envelope?.total_cost_usd ? ` [$${envelope.total_cost_usd.toFixed(2)}]` : "";
   console.log(`Setup context mined (~${tokens} tokens)${costStr} → ${dest}`);
 } catch (e) {
   console.warn(`mine-setup: failed (${e.message})`);

@@ -1,19 +1,11 @@
 #!/usr/bin/env node
 /**
- * Copies runtime files to ~/.claude/plugins/claude-coach/ so the statusline
- * never reaches back into the plugin cache. Idempotent — safe to re-run
- * on every plugin update.
+ * Ensures the mutable runtime directory exists and writes a version marker.
+ * Scripts run directly from the plugin cache — no file copies needed.
  *
  * Part of claude-coach.
  * Source: CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..")
- * Target: ~/.claude/plugins/claude-coach/
- *
- * Files copied:
- *   statusline-tips.js   (statusline entrypoint)
- *   session-advisor.js   (library + worker)
- *
- * Data files (tips.json, claude-usage.md) are read from __dirname at
- * runtime — no copy needed.
+ * Target: ~/.claude/plugins/claude-coach/  (mutable data only: cache/, logs, setup-context)
  */
 
 const fs = require("fs");
@@ -23,22 +15,12 @@ const os = require("os");
 const src = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..");
 const dest = path.join(os.homedir(), ".claude", "plugins", "claude-coach");
 
-const FILES = [
-  { from: path.join("scripts", "statusline-tips.js"), to: "statusline-tips.js" },
-  { from: path.join("scripts", "session-advisor.js"), to: "session-advisor.js" },
-];
-
 try {
   fs.mkdirSync(dest, { recursive: true });
 
-  for (const { from, to, optional } of FILES) {
-    const srcPath = path.join(src, from);
-    const destPath = path.join(dest, to);
-    try {
-      fs.copyFileSync(srcPath, destPath);
-    } catch (e) {
-      if (!optional) throw e;
-    }
+  // Clean up stale runtime copies (now served from plugin cache)
+  for (const stale of ["statusline-tips.js", "session-advisor.js"]) {
+    try { fs.unlinkSync(path.join(dest, stale)); } catch {}
   }
 
   // Write version marker for diagnostics
@@ -53,7 +35,7 @@ try {
     JSON.stringify({ version, installedAt: new Date().toISOString(), source: src }, null, 2) + "\n"
   );
 
-  console.log(`claude-coach: runtime files installed to ${dest} (v${version})`);
+  console.log(`claude-coach: runtime dir ready at ${dest} (v${version})`);
 } catch (e) {
   console.warn(`claude-coach: install-statusline failed (${e.message})`);
   process.exit(0); // fail-open

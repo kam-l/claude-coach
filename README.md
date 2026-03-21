@@ -1,9 +1,9 @@
 # claude-coach
 
-**Prompt enrichment, adversarial stress-testing, live session advisor, and 109 curated tips for Claude Code.**
+**Prompt enrichment, adversarial stress-testing, live session advisor, and 112 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
-[![tips](https://img.shields.io/badge/tips-109%20curated-orange)](tips.json)
+[![tips](https://img.shields.io/badge/tips-112%20curated-orange)](tips.json)
 [![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
 [![version](https://img.shields.io/github/v/tag/kam-l/claude-coach?label=version&color=green)](https://github.com/kam-l/claude-coach/releases)
 [![npm](https://img.shields.io/npm/v/@kam-l/claude-coach)](https://www.npmjs.com/package/@kam-l/claude-coach)
@@ -16,7 +16,7 @@
 - **Prompt enrichment** — classifies ambiguous prompts via Groq, steers Claude's first action automatically
 - **Adversarial commands** — `/think` (Hegelian dialectic), `/verify`, `/challenge`, `/refine`
 - **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
-- **109 curated tips** — sourced from Boris Cherny + Anthropic team best practices
+- **112 curated tips** — sourced from Boris Cherny + Anthropic team best practices
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
 ## Install
@@ -95,7 +95,7 @@ Five commands for structured decision-making and quality assurance:
 
 ### 💡 Spinner tips (always on, zero cost)
 
-100+ hand-curated tips (sourced from Boris Cherny + Anthropic team) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
+112 hand-curated tips (sourced from Boris Cherny + Anthropic team) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
 
 ### ℹ️ Sonnet advisor (opt-in)
 
@@ -141,6 +141,7 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 |----------|---------|-------------|
 | `CLAUDE_COACH` | `0` | Enable Sonnet advisor + hook injection |
 | `CLAUDE_COACH_INTERVAL` | `900` | Seconds between advisor cycles |
+| `CLAUDE_COACH_COSTS` | `0` | Show advisor cost in statusline (`[$0.05]`) |
 | `GROQ_API_KEY` | — | Prompt enrichment via Groq (free tier, ~250ms) |
 | `ANTHROPIC_API_KEY` | — | Prompt enrichment fallback via Haiku (~$1/month) |
 
@@ -155,12 +156,12 @@ Or run `/claude-coach:init` for guided setup.
 
 | Category | # | Examples |
 |----------|---|---------|
-| Workflow | 22 | Plan mode, `/rewind`, fan-out, "paste bug say fix", /loop, parallel worktrees |
+| Workflow | 23 | Plan mode, `/rewind`, fan-out, "paste bug say fix", /loop, parallel worktrees |
 | Context | 20 | 200-line limit, `/compact` at 50%, "Update CLAUDE.md so you don't repeat this" |
 | Agents | 18 | Test time compute, "say use subagents", pipeline gates, fan-out scoping |
-| Hooks | 12 | `exit 2` feedback, route permissions to Opus, Stop hook to nudge |
-| Quality | 24 | "Grill me — no PR until I pass", prototype > PRD, Explanatory output style |
-| Performance | 17 | `/sandbox` (84% fewer prompts), voice dictation, Opus with thinking |
+| Hooks | 11 | `exit 2` feedback, route permissions to Opus, Stop hook to nudge |
+| Quality | 22 | "Grill me — no PR until I pass", prototype > PRD, Explanatory output style |
+| Performance | 18 | `/sandbox` (84% fewer prompts), voice dictation, Opus with thinking |
 
 ## All Commands
 

@@ -110,7 +110,7 @@ function getSessionAdvice({ sessionId, cwd } = {}) {
       const idx = stableIndex(cache.tips, 30);
       const prefix = cache.strength === "inject" ? "⚠️" : "ℹ️";
       const tip = cache.tips[idx].replace(/^💡/, prefix);
-      const cost = cache.cost_usd ? ` [$${cache.cost_usd.toFixed(4)}]` : "";
+      const cost = cache.cost_usd && process.env.CLAUDE_COACH_COSTS ? ` [$${cache.cost_usd.toFixed(2)}]` : "";
       return `\n${FG}${tip}${cost}${RST}`;
     }
   }
@@ -406,7 +406,7 @@ strength: "inject" = strong, session-specific, Claude should act on this now.
 strength: "display" = worth showing in statusline, not worth injecting.
 strength: "skip" = nothing actionable right now.
 
-Each tip: 💡 prefix, max 80 chars. Generic advice = failure.
+Each tip: 💡 prefix, max 80 chars. NEVER include cost/price figures in tips. Generic advice = failure.
 
 Good: "💡 Run tests before committing the auth middleware changes"
 Good: "💡 /compact — context looks heavy, compact before next task"

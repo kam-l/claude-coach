@@ -67,17 +67,11 @@ Use the resolved home directory path, not `~`.
 ```bash
 node -e "
 const fs = require('fs'), path = require('path'), os = require('os');
-const coachDir = path.join(os.homedir(), '.claude', '.coach');
+const coachDir = path.join(os.homedir(), '.claude', 'plugins', 'claude-coach');
 console.log(fs.existsSync(path.join(coachDir, 'session-advisor.js')) ? 'runtime: installed' : 'runtime: MISSING');
-console.log(fs.existsSync(path.join(coachDir, 'tips.json')) ? 'tips.json: copied' : 'tips.json: MISSING');
-console.log(fs.existsSync(path.join(coachDir, 'setup-context.md')) ? 'setup-context: mined' : 'setup-context: MISSING');
-const paths = [
-  path.join(os.homedir(), '.claude', 'settings.json'),
-  path.join(process.cwd(), '.claude', 'settings.json'),
-  path.join(process.cwd(), '.claude', 'settings.local.json')
-];
-const found = paths.find(p => { try { return JSON.parse(fs.readFileSync(p,'utf-8')).spinnerTipsEnabled; } catch { return false; } });
-console.log(found ? 'spinner: configured (' + found + ')' : 'spinner: missing');
+console.log(fs.existsSync(path.join(coachDir, 'statusline-tips.js')) ? 'statusline: installed' : 'statusline: MISSING');
+const settings = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude', 'settings.json'), 'utf-8'));
+console.log(settings.spinnerTipsOverride?.tips?.length ? 'spinner: ' + settings.spinnerTipsOverride.tips.length + ' tips' : 'spinner: MISSING');
 "
 ```
 
