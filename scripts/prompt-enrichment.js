@@ -178,6 +178,9 @@ function buildAnthropicRequest(apiKey, prompt) {
     process.exit(0);
   }
 
+  // Skip subagents — only enrich main conversation
+  if (data.agent_id) process.exit(0);
+
   const prompt = data.prompt || "";
   if (!prompt) process.exit(0);
 

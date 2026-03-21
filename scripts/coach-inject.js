@@ -18,6 +18,7 @@ const CACHE_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach", 
 try {
   const input = fs.readFileSync(0, "utf-8");
   const data = JSON.parse(input);
+  if (data.agent_id) process.exit(0); // skip subagents
   const sessionId = data.session_id;
   if (!sessionId) process.exit(0);
 
