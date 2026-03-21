@@ -123,7 +123,7 @@ When the advisor has *strong* advice, it's injected directly into Claude's conte
 
 `inversion` · `first-principles` · `second-order` · `5-whys` · `pareto` · `via-negativa` · `opportunity-cost` · `occams-razor` · `10-10-10` · `eisenhower-matrix` · `swot` · `one-thing`
 
-Used automatically by the adversary agent when analyzing decisions and assumptions.
+Based on [taches-cc-resources/commands/consider](https://github.com/glittercowboy/taches-cc-resources/tree/main/commands/consider) by Lex Christopherson (MIT). Used automatically by the adversary agent when analyzing decisions and assumptions.
 
 ## Configuration
 
@@ -178,6 +178,7 @@ Or run `/claude-coach:init` for guided setup.
 ## Sources
 
 - [Boris Cherny's tips](https://github.com/shanraisshan/claude-code-best-practice) — community-curated best practices from the creator of Claude Code + team (primary source for tips)
+- [taches-cc-resources](https://github.com/glittercowboy/taches-cc-resources) by Lex Christopherson — 12 thinking lenses (MIT)
 - [Anthropic Claude Code docs](https://code.claude.com/docs/en/best-practices)
 
 ## License
