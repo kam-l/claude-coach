@@ -1,5 +1,5 @@
 ---
-description: Single-pass adversarial stress-test
+# Internal: called by /verify when classification = challenge
 argument-hint: [target]
 ---
 

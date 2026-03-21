@@ -1,5 +1,5 @@
 ---
-description: Batch Q&A with choices
+# Internal: called by prompt enrichment (clarify directive)
 disable-model-invocation: true
 ---
 

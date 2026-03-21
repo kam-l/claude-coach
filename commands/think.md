@@ -1,5 +1,5 @@
 ---
-description: Thesis/antithesis/synthesis dialectic
+# Internal: called by /verify when classification = think
 argument-hint: [claim-or-design-to-challenge]
 ---
 

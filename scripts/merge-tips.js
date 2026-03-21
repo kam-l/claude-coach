@@ -77,7 +77,7 @@ process.stdin.on("end", () => {
     const lines = [
       "# Tip Candidates",
       "",
-      "Weak tips from last refresh. Review and `/tips add` any worth keeping.",
+      "Weak tips from last refresh. Review and `/setup customize` to add any worth keeping.",
       "",
       ...weak.map(({ tip, category }) => `- [${category}] ${tip}`),
       "",

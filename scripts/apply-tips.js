@@ -95,8 +95,8 @@ function scanTips(commandDirs, skillDirs, suffix, seenNames) {
     if (seenNames.has(name)) continue;
     seenNames.add(name);
     const fm = extractFrontmatter(content);
-    const desc = fm.description || content.split("\n")[0].replace(/^#\s*/, "");
-    if (desc) tips.push(formatTip(name, desc, suffix));
+    if (!fm.description) continue;
+    tips.push(formatTip(name, fm.description, suffix));
   }
 
   for (const file of findFiles(skillDirs, "SKILL.md")) {

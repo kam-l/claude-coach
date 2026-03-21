@@ -12,10 +12,10 @@
 
 ![claude-coach showcase](showcase.gif)
 
-- **Prompt enrichment** — classifies ambiguous prompts via Groq, steers Claude's first action automatically
-- **Adversarial commands** — `/think` (Hegelian dialectic), `/verify`, `/challenge`, `/refine`
 - **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
 - **112 curated tips** — sourced from Boris Cherny + Anthropic team best practices
+- **Prompt enrichment** — classifies ambiguous prompts via Groq, steers Claude's first action automatically
+- **Two commands** — `/setup` (install, uninstall, refresh, customize) and `/verify` (adversarial escalation)
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
 ## Install
@@ -34,10 +34,13 @@ Set as system environment variables. Without either key, prompt enrichment is si
 ## Quick Start
 
 ```bash
-# Inside Claude Code — guided setup
-/claude-coach:init
+# Inside Claude Code — one command for everything
+/claude-coach:setup install       # first-time setup
+/claude-coach:setup refresh       # re-apply tips after adding commands/skills
+/claude-coach:setup customize     # list tips, add custom tips, explain plugin
+/claude-coach:setup uninstall     # remove all traces
 
-# Restart Claude Code to load changes
+# Restart Claude Code after install/refresh/uninstall
 ```
 
 ## How It Works
@@ -47,42 +50,40 @@ Set as system environment variables. Without either key, prompt enrichment is si
 Classifies ambiguous user prompts via Groq and routes Claude to the right workflow before it starts working:
 
 ```
-User prompt → local gate → Groq classifier
+User prompt → frustration? ──yes──→ /verify (immediate)
+                  │no
+                  ▼
+              local gate → Groq classifier
                                 │
-                ┌───────┬───────┼───────┬────────┐
-                ▼       ▼       ▼       ▼        ▼
-             clarify  probe   recon   plan     none
-                │       │       │       │
+                ┌───────┬───────┼───────┐
                 ▼       ▼       ▼       ▼
-          /question  /verify  Agent   EnterPlanMode
-                       │     (Explore)
-               ┌───────┼───────┐
-               ▼       ▼       ▼
-          /challenge /refine /think
+             clarify  plan    recon   none
+                │       │       │
+                ▼       ▼       ▼
+          /question  PlanMode  Agent
+                              (Explore)
 ```
 
 | Directive | Routes to | When |
 |-----------|----------|------|
 | `clarify` | `/claude-coach:question` | Ambiguous scope, missing detail |
-| `probe` | `/claude-coach:verify` | Unstated assumptions, opinions, trade-offs — auto-escalates to challenge, refine, or think |
+| `frustration` | `/claude-coach:verify` | User frustration, blame, disagreement — auto-escalates to challenge, refine, or think |
+| `plan` | EnterPlanMode | 2+ files, 2+ steps, architecture |
 | `recon` | Agent (Explore) | References unexamined code |
-| `plan` | EnterPlanMode | Multi-file, 3+ subtasks, architecture |
 
 The local gate skips trivial prompts (short commands, confirmations, slash commands) with zero latency. Only hedging, vague, multi-sentence, or broad-scope prompts reach the classifier (~250ms via Groq free tier).
 
 Requires `GROQ_API_KEY` (free — [console.groq.com](https://console.groq.com)) or `ANTHROPIC_API_KEY` (fallback) as a system environment variable. Silently skips if neither is set.
 
-### 🗡️ Adversarial commands
+### 🗡️ Adversarial verification
 
-Five commands for structured decision-making and quality assurance:
+One user-facing command — `/verify` — auto-escalates based on what you point it at:
 
-| Command | What it does |
-|---------|-------------|
-| `/claude-coach:question` | Batch Q&A with choices — structured clarification |
-| `/claude-coach:think` | Thesis/antithesis/synthesis dialectic — spawns attacker + defender agents |
-| `/claude-coach:verify` | Auto-escalating verification — routes to challenge, refine, or think |
-| `/claude-coach:challenge` | Single-pass adversarial stress-test |
-| `/claude-coach:refine` | Iterative adversarial refinement loop (up to 5 rounds) |
+| Target type | Escalates to | What happens |
+|-------------|-------------|--------------|
+| File or artifact | `refine` | Iterative adversary loop (up to 5 rounds) |
+| Claim or decision | `think` | Hegelian dialectic — attacker + defender agents |
+| Quick sanity check | `challenge` | Single-pass stress-test |
 
 ### 💡 Spinner tips (always on, zero cost)
 
@@ -141,7 +142,7 @@ Set API keys as **system environment variables**, not in settings.json.
 **Advisor cost:** ~$0.10-0.18/cycle. Pro/Max users spend rate-limit budget, not dollars.
 **Enrichment cost:** Free with Groq. ~$0.001/day with Anthropic Haiku.
 
-Or run `/claude-coach:init` for guided setup.
+Or run `/claude-coach:setup install` for guided setup — it wires all of this automatically.
 
 ## Tip Categories
 
@@ -158,14 +159,17 @@ Or run `/claude-coach:init` for guided setup.
 
 | Command | What it does |
 |---------|-------------|
-| `/claude-coach:init` | Full setup — spinner tips + setup mining + statusline + advisor |
-| `/claude-coach:tips` | List, add, or refresh tips (curated + project-specific) |
-| `/claude-coach:uninstall` | Remove all traces |
-| `/claude-coach:question` | Batch Q&A with choices |
-| `/claude-coach:think` | Thesis/antithesis/synthesis dialectic |
-| `/claude-coach:verify` | Auto-escalating adversarial verification |
-| `/claude-coach:challenge` | Single-pass adversarial stress-test |
-| `/claude-coach:refine` | Iterative adversarial refinement loop |
+| `/claude-coach:setup` | Install, uninstall, refresh tips, or customize (router skill) |
+| `/claude-coach:verify` | Auto-escalating adversarial verification — routes to challenge, refine, or think |
+
+Internal (called by enrichment or /verify — not user-facing):
+
+| Command | What it does |
+|---------|-------------|
+| `question` | Batch Q&A with choices (enrichment: clarify directive) |
+| `challenge` | Single-pass adversarial stress-test |
+| `refine` | Iterative adversarial refinement loop (up to 5 rounds) |
+| `think` | Thesis/antithesis/synthesis dialectic |
 
 ## Sources
 

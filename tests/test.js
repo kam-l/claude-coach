@@ -46,14 +46,16 @@ assert(!packageJson.files, "no files array (npm path removed)");
 
 describe("commands");
 
-assert(fs.existsSync(path.join(ROOT, "commands", "init.md")), "commands/init.md exists");
-assert(fs.existsSync(path.join(ROOT, "commands", "tips.md")), "commands/tips.md exists");
-assert(fs.existsSync(path.join(ROOT, "commands", "uninstall.md")), "commands/uninstall.md exists");
+assert(fs.existsSync(path.join(ROOT, "commands", "verify.md")), "commands/verify.md exists");
+assert(!fs.existsSync(path.join(ROOT, "commands", "init.md")), "commands/init.md removed (moved to setup skill)");
+assert(!fs.existsSync(path.join(ROOT, "commands", "tips.md")), "commands/tips.md removed (moved to setup skill)");
+assert(!fs.existsSync(path.join(ROOT, "commands", "uninstall.md")), "commands/uninstall.md removed (moved to setup skill)");
 
-const tipsCmd = fs.readFileSync(path.join(ROOT, "commands", "tips.md"), "utf-8");
-assert(tipsCmd.includes("list"), "tips command routes list");
-assert(tipsCmd.includes("add"), "tips command routes add");
-assert(tipsCmd.includes("refresh"), "tips command routes refresh");
+assert(fs.existsSync(path.join(ROOT, "skills", "setup", "SKILL.md")), "skills/setup/SKILL.md exists");
+assert(fs.existsSync(path.join(ROOT, "skills", "setup", "workflows", "install.md")), "setup workflow: install");
+assert(fs.existsSync(path.join(ROOT, "skills", "setup", "workflows", "uninstall.md")), "setup workflow: uninstall");
+assert(fs.existsSync(path.join(ROOT, "skills", "setup", "workflows", "refresh.md")), "setup workflow: refresh");
+assert(fs.existsSync(path.join(ROOT, "skills", "setup", "workflows", "customize.md")), "setup workflow: customize");
 
 // ─── Wiring: plugin file structure ───────────────────────────────
 

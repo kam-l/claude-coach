@@ -1,5 +1,5 @@
 ---
-description: Iterative adversarial refinement loop
+# Internal: called by /verify when classification = refine
 argument-hint: [target]
 ---
 
