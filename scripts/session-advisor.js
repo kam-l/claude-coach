@@ -110,7 +110,8 @@ function getSessionAdvice({ sessionId, cwd } = {}) {
       const idx = stableIndex(cache.tips, 30);
       const prefix = cache.strength === "inject" ? "⚠️" : "ℹ️";
       const tip = cache.tips[idx].replace(/^💡/, prefix);
-      return `\n${FG}${tip}${RST}`;
+      const cost = cache.cost_usd ? ` [$${cache.cost_usd.toFixed(4)}]` : "";
+      return `\n${FG}${tip}${cost}${RST}`;
     }
   }
 
@@ -227,7 +228,7 @@ function runWorker(sessionId, cwd) {
     const prompt = buildPrompt(setupContext, knowledge, transcript);
 
     // Spawn claude
-    const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1"], {
+    const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json"], {
       input: prompt,
       timeout: 60000,
       encoding: "utf-8",
@@ -236,7 +237,16 @@ function runWorker(sessionId, cwd) {
 
     if (result.error || result.status !== 0) return;
 
-    let output = (result.stdout || "").trim();
+    // Parse JSON envelope from --output-format json
+    let envelope, output;
+    try {
+      envelope = JSON.parse((result.stdout || "").trim());
+      output = (envelope.result || "").trim();
+    } catch {
+      // Fallback: treat stdout as plain text (older claude versions)
+      output = (result.stdout || "").trim();
+    }
+
     // Strip markdown fences
     output = output.replace(/^\s*```json?\s*/gm, "").replace(/\s*```\s*$/gm, "").trim();
 
@@ -249,6 +259,8 @@ function runWorker(sessionId, cwd) {
 
     if (!parsed.tips || !Array.isArray(parsed.tips) || parsed.tips.length === 0) return;
 
+    const costUsd = envelope?.total_cost_usd || null;
+
     // Write cache (atomic, Windows-safe)
     const cacheFile = cachePath(sessionId);
     const tmpFile = cacheFile + ".tmp";
@@ -256,6 +268,7 @@ function runWorker(sessionId, cwd) {
       session_id: sessionId,
       tips: parsed.tips,
       strength: parsed.strength || "display",
+      cost_usd: costUsd,
       timestamp: Date.now(),
     });
 

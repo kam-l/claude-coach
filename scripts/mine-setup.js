@@ -150,14 +150,22 @@ Optimize for token efficiency: no filler, no repetition, no explanations of what
 const claudePath = resolveClaudePath();
 console.log("Mining setup context via Sonnet...");
 
-const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1"], {
+const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json"], {
   input: prompt,
   timeout: 120000,
   encoding: "utf-8",
   windowsHide: true,
 });
 
-const output = (result.stdout || "").trim();
+// Parse JSON envelope from --output-format json
+let envelope, output;
+try {
+  envelope = JSON.parse((result.stdout || "").trim());
+  output = (envelope.result || "").trim();
+} catch {
+  // Fallback: treat stdout as plain text (older claude versions)
+  output = (result.stdout || "").trim();
+}
 
 if (result.error || result.status !== 0 || !output) {
   // Fallback: write raw compact data without Sonnet summarization
@@ -186,7 +194,8 @@ try {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, output);
   const tokens = Math.ceil(output.length / 4);
-  console.log(`Setup context mined (~${tokens} tokens) → ${dest}`);
+  const costStr = envelope?.total_cost_usd ? ` [$${envelope.total_cost_usd.toFixed(4)}]` : "";
+  console.log(`Setup context mined (~${tokens} tokens)${costStr} → ${dest}`);
 } catch (e) {
   console.warn(`mine-setup: failed (${e.message})`);
   process.exit(0); // fail-open

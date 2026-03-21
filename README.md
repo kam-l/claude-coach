@@ -3,8 +3,10 @@
 **Prompt enrichment, adversarial stress-testing, live session advisor, and 109 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
+[![npm version](https://img.shields.io/npm/v/@kam-l/claude-coach)](https://www.npmjs.com/package/@kam-l/claude-coach)
+[![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
+[![tips](https://img.shields.io/badge/tips-109%20curated-orange)](tips.json)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![node](https://img.shields.io/node/v/@kam-l/claude-coach)](https://nodejs.org)
 
 <img src="xzibit.png" alt="Yo dawg, I heard you like Claude" width="300">
 
@@ -30,6 +32,12 @@ claude plugin install claude-coach
 npm install -g @kam-l/claude-coach
 ```
 </details>
+
+**Prompt enrichment requires one of:**
+- `GROQ_API_KEY` (free — [console.groq.com](https://console.groq.com)) — recommended
+- `ANTHROPIC_API_KEY` (console.anthropic.com, per-token billing) — fallback
+
+Set as system environment variables. Without either key, prompt enrichment is silently skipped and only spinner tips are active. The Sonnet advisor uses the `claude` CLI directly (your existing Pro/Max subscription) — no API key needed.
 
 ## Quick Start
 
