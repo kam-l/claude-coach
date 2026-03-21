@@ -13,22 +13,22 @@ const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "
 // Routes to plugin commands (/claude-coach:*) and built-in tools (Agent, EnterPlanMode)
 
 const DIRECTIVES = {
-  clarify: `<user-prompt-submit-hook>
-The user's prompt has ambiguous scope or missing critical detail. Use the Skill tool to invoke /claude-coach:question with the ambiguous points as arguments. This will run structured batch Q&A to resolve ambiguity before you start working.
-Exception: if the conversation context already makes the intent clear, note that briefly and proceed normally.
-</user-prompt-submit-hook>`,
-  probe: `<user-prompt-submit-hook>
-The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Use the Skill tool to invoke /claude-coach:verify with the claim or design question as the argument. This will auto-escalate to the right level of scrutiny (challenge, refine, or think).
+  clarify: `<pre-task-instruction>
+The user's prompt has ambiguous scope or missing critical detail. Use the Skill tool to invoke /claude-coach:question with the ambiguous points as arguments.
+Exception: if the conversation context already makes the intent clear, proceed normally.
+</pre-task-instruction>`,
+  probe: `<pre-task-instruction>
+The user's prompt contains unstated assumptions, asks for an opinion, or requests open-ended research. Use the Skill tool to invoke /claude-coach:verify with the claim or design question as the argument.
 Exception: if the user explicitly asks you to just pick, proceed with your best judgment.
-</user-prompt-submit-hook>`,
-  recon: `<user-prompt-submit-hook>
+</pre-task-instruction>`,
+  recon: `<pre-task-instruction>
 The user's prompt references code you may not have examined in this conversation. Use the Agent tool with subagent_type "Explore" to survey the relevant files and summarize findings before proposing changes.
 Exception: if you have already read the relevant files in this conversation, proceed normally.
-</user-prompt-submit-hook>`,
-  plan: `<user-prompt-submit-hook>
+</pre-task-instruction>`,
+  plan: `<pre-task-instruction>
 The user's prompt involves multiple files, subtasks, or architectural changes. Use the EnterPlanMode tool to outline all steps before any Edit or Write. If the prompt contains distinct subtasks, list them separately and complete sequentially.
 Exception: if you have already surveyed the scope and it is a single focused change, proceed normally.
-</user-prompt-submit-hook>`,
+</pre-task-instruction>`,
 };
 
 // --- Classifier system prompt ---
