@@ -23,7 +23,7 @@ Exception: if the user explicitly asks you to just pick, proceed with your best 
 </pre-task-instruction>`,
   recon: `<pre-task-instruction>
 The user's prompt references code you may not have examined in this conversation. Use the Agent tool with subagent_type "Explore" to survey the relevant files and summarize findings before proposing changes.
-Exception: if you have already read the relevant files in this conversation, proceed normally.
+Exception: if you have Read tool results for the specific files mentioned in this prompt, proceed normally.
 </pre-task-instruction>`,
   plan: `<pre-task-instruction>
 The user's prompt involves multiple files, subtasks, or architectural changes. Use the EnterPlanMode tool to outline all steps before any Edit or Write. If the prompt contains distinct subtasks, list them separately and complete sequentially.
@@ -42,10 +42,10 @@ Valid format: {"directive": "key"} or {"directive": "none"}
 Do not include any explanation, preamble, markdown formatting, or text outside the JSON.
 
 Selection criteria (in priority order — when multiple apply, pick the highest):
-1. "clarify" — Ambiguous scope, multiple interpretations, or missing critical detail that would cause a wrong result.
-2. "probe" — Contains unstated assumptions, asks for an opinion or recommendation, or requests open-ended research/comparison.
-3. "recon" — References code, files, or systems the agent hasn't examined.
-4. "plan" — Requires changes across multiple files, contains 3+ subtasks, or involves architecture-level decisions.
+1. "plan" — Requires changes across multiple files, contains 3+ subtasks, or involves architecture-level decisions.
+2. "recon" — References code, files, or systems the agent hasn't examined.
+3. "clarify" — Ambiguous scope, multiple interpretations, or missing critical detail that would cause a wrong result.
+4. "probe" — Contains unstated assumptions, asks for an opinion or recommendation, or requests open-ended research/comparison.
 5. "none" — Clear and actionable despite complexity signals. The agent can proceed normally.
 
 Select "none" when the prompt has a clear single action, even if phrased as a question or with hedging.`;
@@ -72,18 +72,16 @@ function appendLog(entry) {
 function shouldSkip(prompt) {
   const tokens = prompt.trim().split(/\s+/);
   if (tokens.length < 5) return true;
-  if (/^[*/#]/.test(prompt.trim())) return true;
+  if (/^\//.test(prompt.trim())) return true;
   if (/^Analyze a Claude Code session transcript/i.test(prompt.trim())) return true;
   if (/^<task-notification>/i.test(prompt.trim())) return true;
   if (/^(y|n|yes|no|ok|done|looks good|lgtm|continue|sure|go ahead|ship it)\b/i.test(prompt.trim())) return true;
 
   const sentenceBoundaries = prompt.split(/[.!?]\s+[A-Z]/).length;
   const hasQuestion = /\?/.test(prompt);
-  const hasHedging = /\b(maybe|not sure|I think|probably|might|could)\b/i.test(prompt);
+  const hasHedging = /\b(maybe|not sure|I think|probably|might)\b/i.test(prompt);
   const hasBroadScope = /\b(all|everywhere|entire|whole|every)\b/i.test(prompt);
-  const hasVagueReferent = /\b(it|that|the thing|this)\b/i.test(prompt);
-
-  if (sentenceBoundaries <= 1 && !hasQuestion && !(hasVagueReferent && hasHedging) && !hasHedging && !hasBroadScope) {
+  if (sentenceBoundaries <= 1 && !hasQuestion && !hasHedging && !hasBroadScope) {
     return true;
   }
 
@@ -96,14 +94,11 @@ function shouldPass(prompt) {
   const sentenceBoundaries = prompt.split(/[.!?]\s+[A-Z]/).length;
   if (sentenceBoundaries >= 2) return true;
 
-  const hasHedging = /\b(maybe|not sure|I think|probably|might|could)\b/i.test(prompt);
+  const hasHedging = /\b(maybe|not sure|I think|probably|might)\b/i.test(prompt);
   if (hasHedging) return true;
 
   const hasBroadScope = /\b(all|everywhere|entire|whole|every)\b/i.test(prompt);
   if (hasBroadScope) return true;
-
-  const hasVagueReferent = /\b(it|that|the thing|this)\b/i.test(prompt);
-  if (hasVagueReferent && hasHedging) return true;
 
   return false;
 }

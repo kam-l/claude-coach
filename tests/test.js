@@ -156,8 +156,8 @@ assert(shouldSkip("ship it"), "skip: trivial 'ship it'");
 assert(shouldSkip("go ahead"), "skip: trivial 'go ahead'");
 assert(shouldSkip("fix bug"), "skip: <5 tokens");
 assert(shouldSkip("/commit -m 'update'"), "skip: starts with /");
-assert(shouldSkip("# heading stuff here now"), "skip: starts with #");
-assert(shouldSkip("* bullet point item here"), "skip: starts with *");
+assert(!shouldSkip("# heading stuff here now with question?"), "no-skip: markdown heading with question");
+assert(!shouldSkip("* bullet point item here, maybe refactor"), "no-skip: markdown bullet with hedging");
 
 // --- shouldSkip: clear single-action prompts ---
 assert(shouldSkip("Add a loading spinner to the submit button component"), "skip: clear single-action");
@@ -169,7 +169,7 @@ assert(!shouldSkip("Maybe change how that thing handles errors? I am not sure"),
 assert(!shouldSkip("How does the caching layer work?"), "no-skip: question mark");
 assert(!shouldSkip("I think we should probably refactor the auth module"), "no-skip: hedging words");
 assert(!shouldSkip("Change the entire authentication flow to use OAuth"), "no-skip: broad scope (entire)");
-assert(!shouldSkip("It might break something if we change this"), "no-skip: vague + hedging");
+assert(!shouldSkip("It might break something if we change this"), "no-skip: hedging (might)");
 
 describe("prompt-enrichment.js shouldPass");
 
@@ -179,7 +179,7 @@ assert(shouldPass("Can you add a loading spinner?"), "pass: polite question");
 
 // --- shouldPass: hedging ---
 assert(shouldPass("I think we should probably refactor the auth module"), "pass: hedging (I think, probably)");
-assert(shouldPass("Maybe we could improve the error handling"), "pass: hedging (maybe, could)");
+assert(shouldPass("Maybe we should improve the error handling"), "pass: hedging (maybe)");
 
 // --- shouldPass: broad scope ---
 assert(shouldPass("Change the entire authentication flow"), "pass: broad scope (entire)");
