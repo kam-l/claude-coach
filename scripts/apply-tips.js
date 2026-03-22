@@ -140,25 +140,22 @@ if (projectDir) {
 
 // --- Merge ---
 
-// 1. Start with existing tips
-let existing = settings.spinnerTipsOverride?.tips || [];
+// Full-replace curated + generated tips, but preserve:
+// - Other projects' tips (💡 tips ending with [OtherProject])
+// - Non-💡 manual/custom tips
+const existing = settings.spinnerTipsOverride?.tips || [];
+const projectSuffix = projectName ? `[${projectName}]` : null;
 
-// 2. Strip stale generated tips (global + this project only, never touch other projects)
-//    Global tips have no suffix — match by "💡 /{name} —" prefix against globalTips
-const globalPrefixes = new Set(globalTips.map(t => t.toLowerCase().slice(0, 40)));
-existing = existing.filter(t => !globalPrefixes.has(t.toLowerCase().slice(0, 40)));
-if (projectName) {
-  const thisSuffix = `[${projectName}]`;
-  existing = existing.filter(t => !t.endsWith(thisSuffix));
-}
+const preserved = existing.filter(t => {
+  if (!t.startsWith("💡")) return true; // keep non-curated manual tips
+  const bracketMatch = t.match(/\[([^\]]+)\]$/);
+  if (!bracketMatch) return false; // curated or global generated — will be replaced
+  if (projectSuffix && t.endsWith(projectSuffix)) return false; // current project — will be re-generated
+  return true; // other project's tips — keep
+});
 
-// 3. Dedup curated tips against cleaned existing (40-char prefix match)
-const existingLower = new Set(existing.map(t => t.toLowerCase().slice(0, 40)));
-const newCurated = curated.filter(t => !existingLower.has(t.toLowerCase().slice(0, 40)));
-
-// 4. Combine: existing + new curated + global + project tips
 const generatedTips = [...globalTips, ...projectTips];
-const finalTips = [...existing, ...newCurated, ...generatedTips];
+const finalTips = [...curated, ...generatedTips, ...preserved];
 
 settings.spinnerTipsEnabled = true;
 settings.spinnerTipsOverride = {
@@ -166,21 +163,11 @@ settings.spinnerTipsOverride = {
 };
 
 if (dryRun) {
-  console.log(`Would add ${newCurated.length} curated tips (${existing.length} existing)`);
-  if (newCurated.length > 0) {
-    console.log("New curated:", JSON.stringify(newCurated, null, 2));
-  }
-  if (globalTips.length > 0) {
-    console.log(`Would add ${globalTips.length} global tips:`);
-    for (const t of globalTips) console.log("  " + t);
-  }
-  if (projectTips.length > 0) {
-    console.log(`Would add ${projectTips.length} project tips [${projectName}]:`);
-    for (const t of projectTips) console.log("  " + t);
-  }
+  console.log(`Full replace: ${curated.length} curated + ${globalTips.length} global + ${projectTips.length} project tips`);
+  console.log(`Preserved from other projects: ${preserved.length}`);
   console.log(`Total would be: ${finalTips.length} tips`);
 } else {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
-  console.log(`Added ${newCurated.length} curated + ${globalTips.length} global + ${projectTips.length} project tips to ${settingsPath}`);
-  console.log(`Total: ${finalTips.length} tips`);
+  console.log(`Replaced: ${curated.length} curated + ${globalTips.length} global + ${projectTips.length} project tips → ${settingsPath}`);
+  console.log(`Preserved ${preserved.length} other-project tips. Total: ${finalTips.length}`);
 }

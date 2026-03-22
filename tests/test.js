@@ -232,7 +232,7 @@ try {
       env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT }
     }
   );
-  assert(dryRun.includes("Would add"), "dry-run reports additions");
+  assert(dryRun.includes("Full replace"), "dry-run reports full replace");
   assert(dryRun.includes("curated"), "dry-run reports curated count");
 
   // Verify settings.json was NOT modified
