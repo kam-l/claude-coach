@@ -1,8 +1,8 @@
 {
   "name": "claude-coach",
-  "version": "4.7.5",
+  "version": "4.7.6",
   "private": true,
-  "description": "Prompt enrichment, adversarial stress-testing, and 112 curated tips for Claude Code",
+  "description": "Prompt enrichment, adversarial stress-testing, and 127 curated tips for Claude Code",
   "scripts": {
     "test": "node tests/test.js"
   },

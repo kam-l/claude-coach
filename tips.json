@@ -1,5 +1,5 @@
 {
-  "version": "4.2.0",
+  "version": "4.3.0",
   "categories": {
     "workflow": [
       "💡 `Shift+Tab` enters plan mode; `Ctrl+G` opens plan in your editor.",
@@ -24,7 +24,9 @@
       "💡 Paste the bug, say 'fix' — don't micromanage the approach.",
       "💡 If you do it >1x/day, make it a /command or skill.",
       "💡 Run 3-5 Claudes in parallel via worktrees — biggest productivity unlock.",
-      "💡 /loop for recurring tasks — poll deploys, babysit PRs (up to 3 days)."
+      "💡 /loop for recurring tasks — poll deploys, babysit PRs (up to 3 days).",
+      "💡 'Choose an approach and commit' — avoid analysis paralysis loops.",
+      "💡 Say 'change X' not 'can you suggest changes' — be action-explicit."
     ],
     "context": [
       "💡 Keep `CLAUDE.md` under 200 lines; overflow → `.claude/rules/` files.",
@@ -46,7 +48,10 @@
       "💡 After corrections: 'Update CLAUDE.md so you don't repeat this.'",
       "💡 Tag @claude on PRs to auto-evolve CLAUDE.md over time.",
       "💡 Finish migrations — partial frameworks confuse model pattern matching.",
-      "💡 'Run the tests' should work first try — fix CLAUDE.md if not."
+      "💡 'Run the tests' should work first try — fix CLAUDE.md if not.",
+      "💡 Long context? Data at top, query at bottom — up to 30% boost.",
+      "💡 Ground long-doc answers in quotes first — cuts through noise.",
+      "💡 Restrict to provided docs: 'only use info from these sources'."
     ],
     "agents": [
       "💡 Pass file paths to agents, not content — they read files themselves.",
@@ -66,7 +71,8 @@
       "💡 Adversarial pattern: defender ‖ attacker → judge for design decisions.",
       "💡 Restrict agent tools to scope: Read-only for research, Write for code.",
       "💡 Say 'use subagents' to throw more compute at any hard problem.",
-      "💡 Test time compute: separate contexts catch bugs one agent can't see."
+      "💡 Test time compute: separate contexts catch bugs one agent can't see.",
+      "💡 Curb Opus subagent overuse: 'work directly for simple tasks'."
     ],
     "hooks": [
       "💡 `exit 2` from a hook feeds stderr to Claude — use for corrections.",
@@ -103,7 +109,15 @@
       "💡 Prototype > PRD — build 20-30 versions, shots are cheap.",
       "💡 Use Explanatory output style when onboarding to new codebases.",
       "💡 Agentic search (glob + grep) beats RAG — no sync drift.",
-      "💡 Skill description is a trigger, not a summary — write for the model."
+      "💡 Skill description is a trigger, not a summary — write for the model.",
+      "💡 Tell Claude what TO do, not what NOT to do — positive framing steers.",
+      "💡 Add WHY behind instructions — Claude generalizes from motivation.",
+      "💡 'Investigate before answering' blocks hallucination on unread code.",
+      "💡 Self-correct loop: generate → review vs criteria → refine.",
+      "💡 Match prompt formatting to the output format you want back.",
+      "💡 Don't let test cases define the solution — insist on general logic.",
+      "💡 'Go beyond the basics' — explicit ambition unlocks richer output.",
+      "💡 Let Claude say 'I don't know' — reduces hallucinated answers."
     ],
     "performance": [
       "💡 Use `/model` to downgrade for simple mechanical tasks — save tokens.",
@@ -123,7 +137,8 @@
       "💡 `claude -p --output-format stream-json` pipes structured output to tools.",
       "💡 Voice dictation: speak 3x faster than typing, richer prompts.",
       "💡 `/sandbox` — 84% fewer permission prompts (Anthropic internal data).",
-      "💡 Use Opus with thinking for everything — less steering = net faster."
+      "💡 Use Opus with thinking for everything — less steering = net faster.",
+      "💡 CI: `-p --max-turns 3 --max-budget-usd 1.50` caps runaway agents."
     ]
   }
 }

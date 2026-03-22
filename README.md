@@ -1,9 +1,9 @@
 # claude-coach
 
-**Prompt enrichment, adversarial stress-testing, live session advisor, and 112 curated tips for Claude Code.**
+**Prompt enrichment, adversarial stress-testing, live session advisor, and 127 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
-[![tips](https://img.shields.io/badge/tips-112%20curated-orange)](tips.json)
+[![tips](https://img.shields.io/badge/tips-127%20curated-orange)](tips.json)
 [![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
 [![version](https://img.shields.io/github/v/tag/kam-l/claude-coach?label=version&color=green)](https://github.com/kam-l/claude-coach/releases)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -90,7 +90,7 @@ One user-facing command — `/verify` — auto-escalates based on what you point
 
 ### 💡 Spinner tips (always on, zero cost)
 
-112 hand-curated tips (sourced from Boris Cherny + Anthropic team) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
+127 hand-curated tips (sourced from Boris Cherny, Anthropic team best practices, and community) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
 
 ### ℹ️ Sonnet advisor (opt-in)
 
@@ -151,12 +151,12 @@ Or run `/claude-coach:setup install` for guided setup — it wires all of this a
 
 | Category | # | Examples |
 |----------|---|---------|
-| Workflow | 23 | Plan mode, `/rewind`, fan-out, "paste bug say fix", /loop, parallel worktrees |
-| Context | 20 | 200-line limit, `/compact` at 50%, "Update CLAUDE.md so you don't repeat this" |
-| Agents | 18 | Test time compute, "say use subagents", pipeline gates, fan-out scoping |
+| Workflow | 25 | Plan mode, `/rewind`, fan-out, "choose and commit", action-explicit phrasing |
+| Context | 23 | 200-line limit, `/compact` at 50%, data-at-top/query-at-bottom, quote grounding |
+| Agents | 19 | Test time compute, "say use subagents", pipeline gates, curb overuse |
 | Hooks | 11 | `exit 2` feedback, route permissions to Opus, Stop hook to nudge |
-| Quality | 22 | "Grill me — no PR until I pass", prototype > PRD, Explanatory output style |
-| Performance | 18 | `/sandbox` (84% fewer prompts), voice dictation, Opus with thinking |
+| Quality | 30 | Positive framing, add WHY, self-correct loops, "grill me — no PR until I pass" |
+| Performance | 19 | `/sandbox` (84% fewer prompts), CI budget caps, Opus with thinking |
 
 ## User-Facing Commands
 
@@ -171,6 +171,10 @@ Internal (called by enrichment or `/verify` — not invoked directly):
 ## Sources
 
 - [Boris Cherny's tips](https://github.com/shanraisshan/claude-code-best-practice) — community-curated best practices from the creator of Claude Code + team (primary source for tips)
+- [Anthropic prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) — official prompt engineering guide (positive framing, WHY behind instructions, self-correct loops)
+- [Anthropic strengthen guardrails](https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations) — hallucination reduction, consistency, quote grounding
+- [Anthropic skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — skill authoring patterns, progressive disclosure, eval-driven dev
+- [trigger.dev 10 CC tips](https://trigger.dev/blog/10-claude-code-tips-you-did-not-know) — CI safety caps, effort slider, session forking
 - [taches-cc-resources](https://github.com/glittercowboy/taches-cc-resources) by Lex Christopherson — 12 thinking lenses (MIT)
 - [Anthropic Claude Code docs](https://code.claude.com/docs/en/best-practices)
 
