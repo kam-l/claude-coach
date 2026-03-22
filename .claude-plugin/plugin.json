@@ -1,6 +1,6 @@
 {
   "name": "claude-coach",
-  "version": "4.7.8",
-  "description": "Prompt enrichment, adversarial stress-testing, and 127 curated tips for Claude Code.",
+  "version": "4.7.9",
+  "description": "Adversarial stress-testing, live session advisor, and 127 curated tips for Claude Code.",
   "author": { "name": "kam-l" }
 }

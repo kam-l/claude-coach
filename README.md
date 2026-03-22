@@ -1,6 +1,6 @@
 # claude-coach
 
-**Prompt enrichment, adversarial stress-testing, live session advisor, and 127 curated tips for Claude Code.**
+**Adversarial stress-testing, live session advisor, and 127 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
 [![tips](https://img.shields.io/badge/tips-127%20curated-orange)](tips.json)
@@ -12,10 +12,10 @@
 
 ![claude-coach showcase](showcase.gif)
 
-- **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
 - **127 curated tips** — sourced from Boris Cherny, Anthropic docs, and community best practices
-- **Prompt enrichment** — detects frustration via local regex, auto-routes to `/verify` (zero latency, no API)
-- **Two commands** — `/setup` (install, uninstall, refresh, customize) and `/verify` (adversarial escalation)
+- **`/verify`** — auto-escalating adversarial verification (challenge, refine, or dialectic)
+- **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
+- **Frustration detection** — auto-routes to `/verify` when things go sideways (local regex, zero latency)
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
 ## Install
@@ -25,7 +25,7 @@ claude plugin marketplace add kam-l/claude-coach
 claude plugin install claude-coach
 ```
 
-Prompt enrichment works out of the box (local regex, no API keys). The Sonnet advisor uses the `claude` CLI directly (your existing Pro/Max subscription) — no API key needed.
+No API keys required. The Sonnet advisor uses the `claude` CLI directly (your existing Pro/Max subscription).
 
 ## Quick Start
 
@@ -41,25 +41,9 @@ Prompt enrichment works out of the box (local regex, no API keys). The Sonnet ad
 
 ## How It Works
 
-### 🎯 Prompt enrichment (automatic)
-
-Detects user frustration via local regex and auto-routes to adversarial verification — zero latency, no API calls:
-
-```
-User prompt → skip? (slash cmd, advisor, short) → exit
-                  │ no
-                  ▼
-              frustration? ──yes──→ /verify (immediate)
-                  │ no
-                  ▼
-                 pass through
-```
-
-Triggers on: expletives, blame ("why did you", "you broke"), repeated negation, "still broken", "not what I asked". No API keys required.
-
 ### 🗡️ Adversarial verification
 
-One user-facing command — `/verify` — auto-escalates based on what you point it at:
+One user-facing command — `/verify` — auto-escalates based on what you point it at. Also triggered automatically when frustration is detected (expletives, blame, "still broken", etc.):
 
 | Target type | Escalates to | What happens |
 |-------------|-------------|--------------|
@@ -117,7 +101,6 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 | `CLAUDE_COACH_INTERVAL` | `900` | Seconds between advisor cycles |
 | `CLAUDE_COACH_COSTS` | `0` | Show advisor cost in statusline (`[$0.05]`) |
 **Advisor cost:** ~$0.10-0.18/cycle. Pro/Max users spend rate-limit budget, not dollars.
-**Enrichment cost:** Free (local regex, no API calls).
 
 Or run `/claude-coach:setup install` for guided setup — it wires all of this automatically.
 
