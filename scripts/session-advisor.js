@@ -18,13 +18,15 @@ const { spawn, spawnSync } = require("child_process");
 const FG = "\x1b[38;5;248m";
 const RST = "\x1b[0m";
 
-const CACHE_DIR = path.join(process.env.CLAUDE_PLUGIN_DATA, "cache");
+// Fallback needed: library mode callers (custom statusline) don't have CLAUDE_PLUGIN_DATA
+const DATA_DIR = process.env.CLAUDE_PLUGIN_DATA || path.join(os.homedir(), ".claude", "plugins", "claude-coach");
+const CACHE_DIR = path.join(DATA_DIR, "cache");
 const HOME = os.homedir();
 
 // ─── Shared helpers ──────────────────────────────────────────────
 
 function dataDir() {
-  return process.env.CLAUDE_PLUGIN_DATA;
+  return DATA_DIR;
 }
 
 function bundleRoot() {
