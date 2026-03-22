@@ -14,15 +14,24 @@ Decision-tree reference for setup workflows. Load specific sections, not the who
 | `apply-tips.js` | CLI (setup) | Merges `tips.json` into `spinnerTipsOverride` in settings. `--project-dir` for project tips. |
 | `statusline-tips.js` | Statusline | Returns random tip or advisor output. Registered as `statusLine` command. |
 | `merge-tips.js` | CLI (maintenance) | Merges tip sources, deduplicates. |
+| `error-logger.js` | Hook (2s timeout) | Logs tool/API failures to `errors.jsonl`. Injects coaching on repeated tool failures. |
 | `helpers.js` | Library | `extractFrontmatter`, `findFiles`, `safeRead`, `safeJSON`. |
 
 ## Hooks
 
-Registered in `hooks/hooks.json` under `UserPromptSubmit`:
+Registered in `hooks/hooks.json`:
+
+**UserPromptSubmit:**
 1. `coach-inject.js` (2s timeout) — injects advisor context
 2. `prompt-enrichment.js` (5s timeout) — classifies and enriches prompts
 
-Both fail-open (exit 0 on error). Both skip subagents (`agent_id` check).
+**PostToolUseFailure:**
+3. `error-logger.js` (2s timeout) — logs tool failures, injects coaching on repeated failures
+
+**StopFailure:**
+4. `error-logger.js` (2s timeout) — logs API errors (observability only, output ignored)
+
+All fail-open (exit 0 on error). UserPromptSubmit hooks skip subagents (`agent_id` check).
 
 ## Settings Touched
 
@@ -55,6 +64,7 @@ Location: `${CLAUDE_PLUGIN_DATA}`
 | `setup-context.md` | Mined coaching context for advisor |
 | `cache/` | Advisor cache (advice per session) |
 | `enrichment-log.jsonl` | Enrichment debug log |
+| `errors.jsonl` | Tool + API error log for advisor analysis |
 
 Legacy locations (cleaned during install): `~/.claude/.coach/`, `~/.claude/statusline-tips.js`
 
