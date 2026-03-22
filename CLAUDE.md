@@ -5,16 +5,16 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 ## Key Invariants
 
 - `session-advisor.js` is dual-mode (library + worker). Both must work after edits.
+- `session-advisor.js` MUST fallback `CLAUDE_PLUGIN_DATA` to `~/.claude/plugins/claude-coach/` — library mode callers (custom statusline) don't have the env var
 - Worker calls `claude -p --model sonnet` — the one correct `claude -p` usage (standalone, no Claude Code context)
-- `prompt-enrichment.js` calls Groq/Anthropic API directly (NOT `claude -p` — too slow for sync hooks)
-- `prompt-enrichment.js` must skip advisor prompts (starts with "Analyze a Claude Code session transcript")
+- `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing
 - `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — scripts run from plugin cache
 - Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
 - Mutable data (cache, logs, setup-context) lives under `${CLAUDE_PLUGIN_DATA}`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (seconds, default 900), `CLAUDE_COACH_COSTS` (show cost in statusline)
-- Env vars: `GROQ_API_KEY` (prompt enrichment, free), `ANTHROPIC_API_KEY` (fallback, paid)
+- Env vars: `GROQ_API_KEY` and `ANTHROPIC_API_KEY` no longer required (API classifier removed)
 
 ## Commands & Skills
 

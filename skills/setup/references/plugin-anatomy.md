@@ -7,7 +7,7 @@ Decision-tree reference for setup workflows. Load specific sections, not the who
 | Script | Mode | Purpose |
 |--------|------|---------|
 | `session-advisor.js` | Library + worker | Library: `getSessionAdvice()` for statusline. Worker: `claude -p --model sonnet` transcript analysis. |
-| `prompt-enrichment.js` | Hook (5s timeout) | Groq/Anthropic classifier — routes ambiguous prompts to clarify/frustration/plan/recon directives. |
+| `prompt-enrichment.js` | Hook (5s timeout) | Frustration detection (local regex, no API) — routes to /verify on user frustration. |
 | `coach-inject.js` | Hook (2s timeout) | Injects advisor recommendations as `additionalContext` on UserPromptSubmit. |
 | `install-statusline.js` | CLI (setup) | Creates runtime dir, writes version marker, cleans stale copies. |
 | `mine-setup.js` | CLI (setup) | Scans commands/skills/hooks, calls Sonnet to produce `setup-context.md`. |

@@ -135,79 +135,34 @@ assert(stableIndex(pool, 30) === stableIndex(pool, 30), "stable across same-tick
 assert(stableIndex(["x"], 10) === 0, "single-element pool always returns 0");
 assert(stableIndex([], 10) !== stableIndex([], 10) || true, "empty pool handled (NaN)");
 
-// ─── Unit: prompt-enrichment.js local gate ──────────────────────
+// ─── Unit: prompt-enrichment.js frustration detection ────────────
 
-describe("prompt-enrichment.js shouldSkip");
+describe("prompt-enrichment.js detectFrustration");
 
 const enrichSrc = fs.readFileSync(path.join(ROOT, "scripts", "prompt-enrichment.js"), "utf-8");
-const shouldSkip = new Function(
-  "return " + enrichSrc.match(/function shouldSkip[\s\S]*?^}/m)[0]
-)();
-const shouldPass = new Function(
-  "return " + enrichSrc.match(/function shouldPass[\s\S]*?^}/m)[0]
+const detectFrustration = new Function(
+  "return " + enrichSrc.match(/function detectFrustration[\s\S]*?^}/m)[0]
 )();
 
-// Helper: should the prompt reach the classifier?
-function shouldClassify(p) { return !shouldSkip(p) && shouldPass(p); }
+// --- Should detect frustration ---
+assert(detectFrustration("wtf is this code doing"), "frustration: invective wtf");
+assert(detectFrustration("what the hell happened to the tests"), "frustration: what the hell");
+assert(detectFrustration("why did you delete that file"), "frustration: blame (why did you)");
+assert(detectFrustration("you broke the build again"), "frustration: blame (you broke)");
+assert(detectFrustration("I told you not to change that"), "frustration: I told you");
+assert(detectFrustration("still broken after your fix"), "frustration: still broken");
+assert(detectFrustration("not what I asked for at all"), "frustration: not what I asked");
+assert(detectFrustration("this is wrong, revert it"), "frustration: this is wrong");
+assert(detectFrustration("no no no, undo that"), "frustration: no no no");
+assert(detectFrustration("stop changing the config file"), "frustration: stop changing");
 
-// --- shouldSkip: trivial prompts ---
-assert(shouldSkip("yes"), "skip: trivial 'yes'");
-assert(shouldSkip("no"), "skip: trivial 'no'");
-assert(shouldSkip("lgtm"), "skip: trivial 'lgtm'");
-assert(shouldSkip("ship it"), "skip: trivial 'ship it'");
-assert(shouldSkip("go ahead"), "skip: trivial 'go ahead'");
-assert(shouldSkip("fix bug"), "skip: <5 tokens");
-assert(shouldSkip("/commit -m 'update'"), "skip: starts with /");
-assert(!shouldSkip("# heading stuff here now with question?"), "no-skip: markdown heading with question");
-assert(!shouldSkip("* bullet point item here, maybe refactor"), "no-skip: markdown bullet with hedging");
-
-// --- shouldSkip: clear single-action prompts ---
-assert(shouldSkip("Add a loading spinner to the submit button component"), "skip: clear single-action");
-assert(shouldSkip("Rename the variable from foo to bar in utils.js"), "skip: clear rename");
-assert(shouldSkip("Delete the unused import on line 42 of utils.ts"), "skip: precise action");
-
-// --- shouldSkip: should NOT skip these ---
-assert(!shouldSkip("Maybe change how that thing handles errors? I am not sure"), "no-skip: hedging + question");
-assert(!shouldSkip("How does the caching layer work?"), "no-skip: question mark");
-assert(!shouldSkip("I think we should probably refactor the auth module"), "no-skip: hedging words");
-assert(!shouldSkip("Change the entire authentication flow to use OAuth"), "no-skip: broad scope (entire)");
-assert(!shouldSkip("It might break something if we change this"), "no-skip: hedging (might)");
-
-describe("prompt-enrichment.js shouldPass");
-
-// --- shouldPass: question marks ---
-assert(shouldPass("How does the caching layer work?"), "pass: question mark");
-assert(shouldPass("Can you add a loading spinner?"), "pass: polite question");
-
-// --- shouldPass: hedging ---
-assert(shouldPass("I think we should probably refactor the auth module"), "pass: hedging (I think, probably)");
-assert(shouldPass("Maybe we should improve the error handling"), "pass: hedging (maybe)");
-
-// --- shouldPass: broad scope ---
-assert(shouldPass("Change the entire authentication flow"), "pass: broad scope (entire)");
-assert(shouldPass("Update all the tests everywhere"), "pass: broad scope (all, everywhere)");
-
-// --- shouldPass: multi-sentence ---
-assert(shouldPass("Fix the bug. Also update the docs. Clean up the tests."), "pass: multi-sentence");
-
-// --- shouldPass: should NOT pass (default non-intervention) ---
-assert(!shouldPass("Add error handling to the submit function"), "no-pass: clear single action");
-assert(!shouldPass("Read the package.json file and tell me the version"), "no-pass: clear read request");
-
-describe("prompt-enrichment.js shouldClassify (end-to-end gate)");
-
-// --- Full gate: should reach classifier ---
-assert(shouldClassify("Maybe change how that thing handles errors? I am not sure"), "classify: hedging + vague + question");
-assert(shouldClassify("How does the caching layer work?"), "classify: question");
-assert(shouldClassify("I think we should probably refactor the auth module"), "classify: hedging");
-assert(shouldClassify("Change the entire authentication flow to use OAuth"), "classify: broad scope");
-
-// --- Full gate: should NOT reach classifier ---
-assert(!shouldClassify("yes"), "no-classify: trivial");
-assert(!shouldClassify("fix the bug"), "no-classify: short");
-assert(!shouldClassify("Add a loading spinner to the submit button component"), "no-classify: clear action");
-assert(!shouldClassify("Rename the variable from foo to bar in utils.js"), "no-classify: clear rename");
-assert(!shouldClassify("Run npm install and then npm test"), "no-classify: clear instructions");
+// --- Should NOT detect frustration ---
+assert(!detectFrustration("Add a loading spinner to the button"), "no-frustration: normal request");
+assert(!detectFrustration("How does the caching layer work?"), "no-frustration: question");
+assert(!detectFrustration("Can you refactor the auth module?"), "no-frustration: polite request");
+assert(!detectFrustration("I think we should change the approach"), "no-frustration: hedging");
+assert(!detectFrustration("yes"), "no-frustration: trivial");
+assert(!detectFrustration("The function still needs error handling"), "no-frustration: 'still' without 'broken/wrong'");
 
 // ─── Unit: merge-tips.js dedup logic ─────────────────────────────
 
