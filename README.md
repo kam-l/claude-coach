@@ -13,8 +13,8 @@
 ![claude-coach showcase](showcase.gif)
 
 - **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
-- **112 curated tips** — sourced from Boris Cherny + Anthropic team best practices
-- **Prompt enrichment** — classifies ambiguous prompts via Groq, steers Claude's first action automatically
+- **127 curated tips** — sourced from Boris Cherny, Anthropic docs, and community best practices
+- **Prompt enrichment** — detects frustration via local regex, auto-routes to `/verify` (zero latency, no API)
 - **Two commands** — `/setup` (install, uninstall, refresh, customize) and `/verify` (adversarial escalation)
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
@@ -25,11 +25,7 @@ claude plugin marketplace add kam-l/claude-coach
 claude plugin install claude-coach
 ```
 
-**Prompt enrichment requires one of:**
-- `GROQ_API_KEY` (free — [console.groq.com](https://console.groq.com)) — recommended
-- `ANTHROPIC_API_KEY` (console.anthropic.com, per-token billing) — fallback
-
-Set as system environment variables. Without either key, prompt enrichment is silently skipped and only spinner tips are active. The Sonnet advisor uses the `claude` CLI directly (your existing Pro/Max subscription) — no API key needed.
+Prompt enrichment works out of the box (local regex, no API keys). The Sonnet advisor uses the `claude` CLI directly (your existing Pro/Max subscription) — no API key needed.
 
 ## Quick Start
 
@@ -47,36 +43,19 @@ Set as system environment variables. Without either key, prompt enrichment is si
 
 ### 🎯 Prompt enrichment (automatic)
 
-Classifies ambiguous user prompts via Groq and routes Claude to the right workflow before it starts working:
+Detects user frustration via local regex and auto-routes to adversarial verification — zero latency, no API calls:
 
 ```
 User prompt → skip? (slash cmd, advisor, short) → exit
                   │ no
                   ▼
-              frustration? ──yes──→ /verify (immediate, no API call)
+              frustration? ──yes──→ /verify (immediate)
                   │ no
                   ▼
-              local gate → Groq classifier
-                                │
-                ┌───────┬───────┼───────┐
-                ▼       ▼       ▼       ▼
-             clarify   plan   recon   none
-                │       │       │
-                ▼       ▼       ▼
-       /question  EnterPlanMode  Agent
-                                (Explore)
+                 pass through
 ```
 
-| Directive | Routes to | When |
-|-----------|----------|------|
-| `clarify` | `question` | Ambiguous scope, missing detail |
-| `frustration` | `verify` | User frustration, blame, disagreement — auto-escalates |
-| `plan` | `EnterPlanMode` | 2+ files, 2+ steps, architecture |
-| `recon` | `Agent (Explore)` | References unexamined code |
-
-The local gate skips trivial prompts (short commands, confirmations, slash commands) with zero latency. Only hedging, vague, multi-sentence, or broad-scope prompts reach the classifier (~250ms via Groq free tier).
-
-Requires `GROQ_API_KEY` (free — [console.groq.com](https://console.groq.com)) or `ANTHROPIC_API_KEY` (fallback) as a system environment variable. Silently skips if neither is set.
+Triggers on: expletives, blame ("why did you", "you broke"), repeated negation, "still broken", "not what I asked". No API keys required.
 
 ### 🗡️ Adversarial verification
 
@@ -137,13 +116,8 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 | `CLAUDE_COACH` | `0` | Enable Sonnet advisor + hook injection |
 | `CLAUDE_COACH_INTERVAL` | `900` | Seconds between advisor cycles |
 | `CLAUDE_COACH_COSTS` | `0` | Show advisor cost in statusline (`[$0.05]`) |
-| `GROQ_API_KEY` | — | Prompt enrichment via Groq (free tier, ~250ms) |
-| `ANTHROPIC_API_KEY` | — | Prompt enrichment fallback via Haiku 4.5 |
-
-Set API keys as **system environment variables**, not in settings.json.
-
 **Advisor cost:** ~$0.10-0.18/cycle. Pro/Max users spend rate-limit budget, not dollars.
-**Enrichment cost:** Free with Groq. ~$0.001/day with Anthropic Haiku.
+**Enrichment cost:** Free (local regex, no API calls).
 
 Or run `/claude-coach:setup install` for guided setup — it wires all of this automatically.
 
