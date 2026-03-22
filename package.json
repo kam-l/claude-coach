@@ -1,6 +1,6 @@
 {
   "name": "claude-coach",
-  "version": "4.7.6",
+  "version": "4.7.7",
   "private": true,
   "description": "Prompt enrichment, adversarial stress-testing, and 127 curated tips for Claude Code",
   "scripts": {

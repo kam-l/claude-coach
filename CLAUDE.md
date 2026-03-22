@@ -26,7 +26,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 
 ## Conventions
 
-- Tips: `💡` prefix, max 80 chars, format "Use /X to Y" or "When X, try Y"
+- Tips: `💡` prefix, under 120 chars, format "Use /X to Y" or "When X, try Y"
 - Project-specific tips: `[ProjectName]` suffix (basename of project dir)
 - `tips.json` shape: `{ version, categories: { [name]: string[] } }` — flat string arrays per category
 - Hooks fail-open: never block the user's prompt on error or missing config

@@ -34,8 +34,8 @@ argument-hint: [claim-or-design-to-challenge]
 4. Clean up the team.
 
 5. `AskUserQuestion` with the synthesis, key tensions, and decision points for the user to weigh in on.
-   
-<workflow>
+
+</workflow>
 
 <constraints>
 
