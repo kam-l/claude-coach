@@ -1,6 +1,6 @@
 {
   "name": "claude-coach",
-  "version": "4.7.10",
+  "version": "4.7.11",
   "private": true,
   "description": "Adversarial stress-testing, live session advisor, and 127 curated tips for Claude Code",
   "scripts": {

@@ -50,7 +50,7 @@ Check `statusLine` in `.claude/settings.local.json` -> `.claude/settings.json` -
 
 ## 5. Advisor (optional)
 
-`AskUserQuestion`: "Enable session advisor? Analyzes transcript every 15 min via `claude -p --model sonnet`. Cost: ~$0.10-0.18/cycle. Configurable via `CLAUDE_COACH_INTERVAL` (seconds, default 900)."
+`AskUserQuestion`: "Enable session advisor? Analyzes transcript every 5 min via `claude -p --model sonnet`. Cost: ≤$0.05/call. Configurable via `CLAUDE_COACH_INTERVAL` (minutes, default 5)."
 - Yes: set `CLAUDE_COACH=1` in `~/.claude/settings.json` under `env`
 - No: statusline works, falls back to random tips
 

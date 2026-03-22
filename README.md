@@ -90,7 +90,7 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 {
   "env": {
     "CLAUDE_COACH": "1",
-    "CLAUDE_COACH_INTERVAL": "300"
+    "CLAUDE_COACH_INTERVAL": "5"
   }
 }
 ```
@@ -98,9 +98,9 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CLAUDE_COACH` | `0` | Enable Sonnet advisor + hook injection |
-| `CLAUDE_COACH_INTERVAL` | `900` | Seconds between advisor cycles |
+| `CLAUDE_COACH_INTERVAL` | `5` | Minutes between advisor calls |
 | `CLAUDE_COACH_COSTS` | `0` | Show advisor cost in statusline (`[$0.05]`) |
-**Advisor cost:** ~$0.10-0.18/cycle. Pro/Max users spend rate-limit budget, not dollars.
+**Advisor cost:** ≤$0.05/call (hard-capped via `--max-budget-usd`). Pro/Max users spend rate-limit budget, not dollars.
 
 Or run `/claude-coach:setup install` for guided setup — it wires all of this automatically.
 
@@ -134,6 +134,10 @@ Internal (called by enrichment or `/verify` — not invoked directly):
 - [trigger.dev 10 CC tips](https://trigger.dev/blog/10-claude-code-tips-you-did-not-know) — CI safety caps, effort slider, session forking
 - [taches-cc-resources](https://github.com/glittercowboy/taches-cc-resources) by Lex Christopherson — 12 thinking lenses (MIT)
 - [Anthropic Claude Code docs](https://code.claude.com/docs/en/best-practices)
+
+## Known Issues
+
+Statusline tips may intermittently show `…` instead of the tip text. This is a [Claude Code TUI rendering bug](https://github.com/anthropics/claude-code/issues/28194) affecting multi-line statusline output on Windows ([#32917](https://github.com/anthropics/claude-code/issues/32917)). Tips render correctly — CC's display occasionally drops them between refreshes.
 
 ## License
 

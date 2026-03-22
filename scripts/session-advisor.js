@@ -65,9 +65,9 @@ function intervalSeconds() {
   const env = process.env.CLAUDE_COACH_INTERVAL;
   if (env) {
     const n = parseInt(env, 10);
-    if (n > 0) return n;
+    if (n > 0) return n * 60;
   }
-  return 900;
+  return 300;
 }
 
 function isLockStale(lockFile) {
@@ -230,7 +230,7 @@ function runWorker(sessionId, cwd) {
     const prompt = buildPrompt(setupContext, knowledge, transcript);
 
     // Spawn claude
-    const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--max-turns", "1", "--output-format", "json", "--tools", "", "--no-chrome", "--strict-mcp-config", "--system-prompt", "", "--disable-slash-commands", "--no-session-persistence"], {
+    const result = spawnSync(claudePath, ["-p", "--model", "sonnet", "--effort", "low", "--max-turns", "1", "--max-budget-usd", "0.05", "--output-format", "json", "--tools", "", "--no-chrome", "--strict-mcp-config", "--system-prompt", "", "--disable-slash-commands", "--no-session-persistence"], {
       input: prompt,
       timeout: 60000,
       encoding: "utf-8",

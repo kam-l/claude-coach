@@ -41,7 +41,7 @@ All fail-open (exit 0 on error). UserPromptSubmit hooks skip subagents (`agent_i
 | `spinnerTipsOverride.tips` | `~/.claude/settings.json` | Array of tip strings |
 | `statusLine` | `~/.claude/settings.json` | Command to run `statusline-tips.js` |
 | `env.CLAUDE_COACH` | `~/.claude/settings.json` | Enable advisor (`1`/`0`) |
-| `env.CLAUDE_COACH_INTERVAL` | `~/.claude/settings.json` | Advisor cycle seconds (default 900) |
+| `env.CLAUDE_COACH_INTERVAL` | `~/.claude/settings.json` | Advisor interval in minutes (default 5) |
 | `env.CLAUDE_COACH_COSTS` | `~/.claude/settings.json` | Show cost in statusline |
 
 ## Env Vars
