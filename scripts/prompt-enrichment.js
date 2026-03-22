@@ -3,10 +3,9 @@
 
 const fs = require("fs");
 const https = require("https");
-const os = require("os");
 const path = require("path");
 
-const LOG_PATH = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "enrichment-log.jsonl");
+const LOG_PATH = path.join(process.env.CLAUDE_PLUGIN_DATA, "enrichment-log.jsonl");
 
 // --- Directive payloads (injected as additionalContext) ---
 // 4 directives: clarify > frustration > plan > recon (priority order, highest wins)

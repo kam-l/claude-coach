@@ -18,13 +18,13 @@ const { spawn, spawnSync } = require("child_process");
 const FG = "\x1b[38;5;248m";
 const RST = "\x1b[0m";
 
-const CACHE_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "cache");
+const CACHE_DIR = path.join(process.env.CLAUDE_PLUGIN_DATA, "cache");
 const HOME = os.homedir();
 
 // ─── Shared helpers ──────────────────────────────────────────────
 
 function dataDir() {
-  return path.join(os.homedir(), ".claude", "plugins", "claude-coach");
+  return process.env.CLAUDE_PLUGIN_DATA;
 }
 
 function bundleRoot() {

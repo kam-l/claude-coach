@@ -11,9 +11,8 @@
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
-const CACHE_DIR = path.join(os.homedir(), ".claude", "plugins", "claude-coach", "cache");
+const CACHE_DIR = path.join(process.env.CLAUDE_PLUGIN_DATA, "cache");
 
 try {
   const input = fs.readFileSync(0, "utf-8");

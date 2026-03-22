@@ -30,9 +30,10 @@ Check `statusLine` in `~/.claude/settings.json` -> `.claude/settings.json` -> `.
 node -e "
 const fs = require('fs'), path = require('path'), home = require('os').homedir();
 for (const d of [
+  process.env.CLAUDE_PLUGIN_DATA,
   path.join(home, '.claude', 'plugins', 'claude-coach'),
   path.join(home, '.claude', '.coach'),
-]) { try { fs.rmSync(d, { recursive: true, force: true }); console.log('removed', d); } catch {} }
+].filter(Boolean)) { try { fs.rmSync(d, { recursive: true, force: true }); console.log('removed', d); } catch {} }
 try { fs.unlinkSync(path.join(home, '.claude', 'statusline-tips.js')); console.log('removed legacy'); } catch {}
 "
 ```

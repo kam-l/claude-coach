@@ -3,7 +3,7 @@
  * Claude Code statusline script for claude-coach plugin.
  * Reads session data from stdin, outputs a contextual tip.
  *
- * Install location: ~/.claude/plugins/claude-coach/statusline-tips.js
+ * Install location: ${CLAUDE_PLUGIN_ROOT}/scripts/statusline-tips.js
  * Registered in settings.json as: {"type": "command", "command": "node {HOME}/.claude/.tips/statusline-tips.js"}
  */
 

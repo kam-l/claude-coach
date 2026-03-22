@@ -47,7 +47,7 @@ Both fail-open (exit 0 on error). Both skip subagents (`agent_id` check).
 
 ## Runtime (Mutable)
 
-Location: `~/.claude/plugins/claude-coach/`
+Location: `${CLAUDE_PLUGIN_DATA}`
 
 | Path | Purpose |
 |------|---------|

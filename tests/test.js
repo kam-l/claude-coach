@@ -293,8 +293,7 @@ fs.rmSync(tmpDir2, { recursive: true, force: true });
 
 describe("install-statusline.js");
 
-const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-home-"));
-const tmpTipsDir = path.join(tmpHome, ".claude", "plugins", "claude-coach");
+const tmpDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-data-"));
 
 try {
   const installResult = execSync(
@@ -302,31 +301,35 @@ try {
     {
       encoding: "utf-8",
       timeout: 10000,
-      env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, HOME: tmpHome, USERPROFILE: tmpHome }
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, CLAUDE_PLUGIN_DATA: tmpDataDir }
     }
   );
   assert(installResult.includes("runtime dir ready"), "reports success");
-  assert(!fs.existsSync(path.join(tmpTipsDir, "statusline-tips.js")), "does NOT copy statusline-tips.js (runs from cache)");
-  assert(!fs.existsSync(path.join(tmpTipsDir, "session-advisor.js")), "does NOT copy session-advisor.js (runs from cache)");
-  assert(!fs.existsSync(path.join(tmpTipsDir, "tips.json")), "does NOT copy tips.json (read from bundle)");
-  assert(!fs.existsSync(path.join(tmpTipsDir, "claude-usage.md")), "does NOT copy claude-usage.md (read from bundle)");
-  assert(fs.existsSync(path.join(tmpTipsDir, "version.json")), "wrote version.json");
+  assert(installResult.includes(tmpDataDir), "uses CLAUDE_PLUGIN_DATA path");
+  assert(!fs.existsSync(path.join(tmpDataDir, "statusline-tips.js")), "does NOT copy statusline-tips.js (runs from cache)");
+  assert(!fs.existsSync(path.join(tmpDataDir, "session-advisor.js")), "does NOT copy session-advisor.js (runs from cache)");
+  assert(!fs.existsSync(path.join(tmpDataDir, "tips.json")), "does NOT copy tips.json (read from bundle)");
+  assert(!fs.existsSync(path.join(tmpDataDir, "claude-usage.md")), "does NOT copy claude-usage.md (read from bundle)");
+  assert(fs.existsSync(path.join(tmpDataDir, "version.json")), "wrote version.json");
 
-  const versionData = JSON.parse(fs.readFileSync(path.join(tmpTipsDir, "version.json"), "utf-8"));
+  const versionData = JSON.parse(fs.readFileSync(path.join(tmpDataDir, "version.json"), "utf-8"));
   assert(versionData.version === packageJson.version, "version matches package.json");
 } catch (e) {
   assert(false, "install-statusline.js failed: " + (e.message || "").slice(0, 200));
 }
 
-fs.rmSync(tmpHome, { recursive: true, force: true });
+fs.rmSync(tmpDataDir, { recursive: true, force: true });
 
 // ─── Integration: session-advisor library mode ───────────────────
 
 describe("session-advisor library mode");
 
 // session-advisor reads tips.json from bundleRoot() (__dirname/..) — no install needed.
-
+// CLAUDE_PLUGIN_DATA is required at module load (CACHE_DIR uses it).
+const tmpAdvisorData = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-advisor-"));
+process.env.CLAUDE_PLUGIN_DATA = tmpAdvisorData;
 const { getSessionAdvice } = require(path.join(ROOT, "scripts", "session-advisor.js"));
+delete process.env.CLAUDE_PLUGIN_DATA;
 
 // With no args — should return a fallback tip (not crash)
 const advice = getSessionAdvice();
@@ -337,6 +340,8 @@ assert(advice.includes("\x1b["), "includes ANSI color codes");
 // With advisor disabled — should return fallback
 const advice2 = getSessionAdvice({ sessionId: "test-123", cwd: ROOT });
 assert(typeof advice2 === "string", "returns string with sessionId");
+
+fs.rmSync(tmpAdvisorData, { recursive: true, force: true });
 
 // ─── Report ──────────────────────────────────────────────────────
 

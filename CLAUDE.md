@@ -12,7 +12,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing
 - `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — scripts run from plugin cache
 - Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
-- Mutable data (cache, logs, setup-context) lives under `~/.claude/plugins/claude-coach/`
+- Mutable data (cache, logs, setup-context) lives under `${CLAUDE_PLUGIN_DATA}`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (seconds, default 900), `CLAUDE_COACH_COSTS` (show cost in statusline)
 - Env vars: `GROQ_API_KEY` (prompt enrichment, free), `ANTHROPIC_API_KEY` (fallback, paid)
 

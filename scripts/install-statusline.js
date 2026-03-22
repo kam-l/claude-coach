@@ -5,15 +5,14 @@
  *
  * Part of claude-coach.
  * Source: CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..")
- * Target: ~/.claude/plugins/claude-coach/  (mutable data only: cache/, logs, setup-context)
+ * Target: CLAUDE_PLUGIN_DATA  (mutable data only: cache/, logs, setup-context)
  */
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
 const src = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, "..");
-const dest = path.join(os.homedir(), ".claude", "plugins", "claude-coach");
+const dest = process.env.CLAUDE_PLUGIN_DATA;
 
 try {
   fs.mkdirSync(dest, { recursive: true });

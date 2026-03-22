@@ -46,7 +46,7 @@ Check `statusLine` in `.claude/settings.local.json` -> `.claude/settings.json` -
 |-------|--------|
 | Prior claude-coach version (regex: `/statusline-tip\|session-advisor/`) | Replace `statusLine` command with new path |
 | Unrelated script exists | Do NOT replace. Read target script first. Append coach require + tip output. `AskUserQuestion` with diff before editing. |
-| No statusline | Register in `~/.claude/settings.json`: `"statusLine": {"type": "command", "command": "node {HOME}/.claude/plugins/claude-coach/statusline-tips.js"}` (resolved home path) |
+| No statusline | Register in `~/.claude/settings.json`: `"statusLine": {"type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/statusline-tips.js\""}` |
 
 ## 5. Advisor (optional)
 
@@ -59,7 +59,7 @@ Check `statusLine` in `.claude/settings.local.json` -> `.claude/settings.json` -
 ```bash
 node -e "
 const fs = require('fs'), path = require('path'), os = require('os');
-const coachDir = path.join(os.homedir(), '.claude', 'plugins', 'claude-coach');
+const coachDir = process.env.CLAUDE_PLUGIN_DATA;
 console.log(fs.existsSync(path.join(coachDir, 'version.json')) ? 'runtime: OK' : 'runtime: MISSING');
 const settings = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude', 'settings.json'), 'utf-8'));
 console.log(settings.spinnerTipsOverride?.tips?.length ? 'spinner: ' + settings.spinnerTipsOverride.tips.length + ' tips' : 'spinner: MISSING');
