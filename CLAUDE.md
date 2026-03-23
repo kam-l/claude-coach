@@ -6,7 +6,11 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 
 - `session-advisor.js` is dual-mode (library + worker). Both must work after edits.
 - `session-advisor.js` MUST fallback `CLAUDE_PLUGIN_DATA` to `~/.claude/plugins/claude-coach/` — library mode callers (custom statusline) don't have the env var
-- Worker calls `claude -p --model sonnet` — the one correct `claude -p` usage (standalone, no Claude Code context)
+- Worker calls `claude -p --model sonnet` — correct `claude -p` usage (standalone, no Claude Code context)
+- `reflect-pipeline.js` calls `claude -p --model haiku` then `claude -p --model sonnet` — runs detached after session ends
+- Reflection pipeline: Stop hook → Haiku extract signals → Sonnet generate reflections → pending JSON queue
+- Pending reflections live in `${CLAUDE_PLUGIN_DATA}/pending-reflections/` — never auto-applied
+- Stop hook fires per subagent too — `reflect-hook.js` deduplicates via `agent_id` field (present on subagents, absent on main session)
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing
@@ -20,6 +24,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 
 - `/setup [install|uninstall|refresh|customize]` — skill: install, remove, refresh tips, or explain plugin
 - `/verify [target]` — only user-callable command; auto-escalates to challenge, refine, or think
+- `/reflect [accept-all]` — review pending session reflections; accept/reject/edit proposed memories and tips
 - `/question`, `/challenge`, `/refine`, `/think` — internal (called by enrichment or /verify, no description = hidden from tips)
 - After adding/changing commands: run `/setup refresh` to surface them as spinner tips
 - Shared helpers in `scripts/helpers.js` — `extractFrontmatter`, `findFiles`, `safeRead`, `safeJSON`

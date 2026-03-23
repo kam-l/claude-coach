@@ -7,11 +7,15 @@
  * Registered in settings.json as: {"type": "command", "command": "node {HOME}/.claude/.tips/statusline-tips.js"}
  */
 
+const debug = process.env.CLAUDE_COACH_DEBUG === "1";
+
 let advisor;
 try {
   advisor = require("./session-advisor");
-} catch {
-  // Can't load advisor — exit silently (Claude Code shows "..." for empty output)
+} catch (e) {
+  if (debug) {
+    process.stdout.write(`🐞 advisor load failed: ${e.message}`);
+  }
   process.exit(0);
 }
 
@@ -21,9 +25,22 @@ process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
   try {
     const data = JSON.parse(input);
-    process.stdout.write(advisor.getSessionAdvice({ sessionId: data.session_id, cwd: data.cwd }));
-  } catch {
+    const result = advisor.getSessionAdvice({ sessionId: data.session_id, cwd: data.cwd });
+    if (debug && (!result || result.trim() === "")) {
+      process.stdout.write("🐞 advisor returned empty");
+      return;
+    }
+    process.stdout.write(result);
+  } catch (e) {
+    if (debug) {
+      process.stdout.write(`🐞 ${e.message}`);
+      return;
+    }
     // Fallback: show a random tip even if stdin parse failed
-    process.stdout.write(advisor.getSessionAdvice());
+    try {
+      process.stdout.write(advisor.getSessionAdvice());
+    } catch {
+      // silent
+    }
   }
 });

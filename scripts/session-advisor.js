@@ -135,8 +135,22 @@ function readCache(sid) {
   }
 }
 
+function pendingReflectionCount() {
+  try {
+    const dir = path.join(DATA_DIR, "pending-reflections");
+    if (!fs.existsSync(dir)) return 0;
+    return fs.readdirSync(dir).filter(f => f.endsWith(".json")).length;
+  } catch {
+    return 0;
+  }
+}
+
 function fallbackTip(analyzing) {
   const pool = loadTips();
+  const pending = pendingReflectionCount();
+  if (pending > 0) {
+    return `\n${FG}💡 ${pending} pending reflection${pending > 1 ? "s" : ""} — /reflect to review${RST}`;
+  }
   const idx = stableIndex(pool, 30);
   const prefix = analyzing ? "\u{1F50D} " : "";
   return `\n${FG}${prefix}${pool[idx]}${RST}`;

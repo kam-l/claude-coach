@@ -159,6 +159,7 @@ const finalTips = [...curated, ...generatedTips, ...preserved];
 
 settings.spinnerTipsEnabled = true;
 settings.spinnerTipsOverride = {
+  excludeDefault: true,
   tips: finalTips,
 };
 
