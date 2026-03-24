@@ -33,10 +33,21 @@ const HOME = os.homedir();
 const CHUNK_CHARS = 24000; // ~6k tokens of transcript per Haiku call
 const MAX_HAIKU_CALLS = 8; // $0.05 ceiling with margin
 
+const DEBUG = process.env.CLAUDE_COACH_DEBUG === "1";
+
+function log(msg) {
+  if (!DEBUG) return;
+  try {
+    fs.appendFileSync(path.join(DATA_DIR, "reflect-debug.log"),
+      `${new Date().toISOString()} [pipeline] ${msg}\n`);
+  } catch {}
+}
+
 // ─── Main ────────────────────────────────────────────────────────
 
 const [,, transcriptPath, sessionId, cwd] = process.argv;
 if (!transcriptPath || !sessionId) process.exit(0);
+log(`start: transcript=${transcriptPath} session=${sessionId} cwd=${cwd}`);
 
 try {
   // Acquire lock
@@ -71,15 +82,20 @@ try {
 function run() {
   // Read and parse transcript
   const lines = readTranscript(transcriptPath);
-  if (!lines || lines.length < 20) return; // too short to learn from
+  log(`transcript lines=${lines ? lines.length : 0}`);
+  if (!lines || lines.length < 20) { log("exit: too few lines"); return; }
 
   // Stage 1: Haiku extraction
+  log("stage1: haiku extraction");
   const signals = extractSignals(lines);
-  if (!signals || signals.length === 0) return;
+  log(`signals=${signals ? signals.length : 0}`);
+  if (!signals || signals.length === 0) { log("exit: no signals"); return; }
 
   // Stage 2: Sonnet reflection
+  log("stage2: sonnet reflection");
   const reflection = generateReflection(signals);
-  if (!reflection) return;
+  log(`reflection: memories=${reflection?.memories?.length || 0} tips=${reflection?.tips?.length || 0}`);
+  if (!reflection) { log("exit: no reflection"); return; }
 
   // Write pending reflection
   fs.mkdirSync(PENDING_DIR, { recursive: true });

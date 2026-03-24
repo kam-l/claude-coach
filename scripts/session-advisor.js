@@ -149,7 +149,7 @@ function fallbackTip(analyzing) {
   const pool = loadTips();
   const pending = pendingReflectionCount();
   if (pending > 0) {
-    return `\n${FG}💡 ${pending} pending reflection${pending > 1 ? "s" : ""} — /reflect to review${RST}`;
+    return `\n${FG}💭 ${pending} pending reflection${pending > 1 ? "s" : ""} — /reflect to review${RST}`;
   }
   const idx = stableIndex(pool, 30);
   const prefix = analyzing ? "\u{1F50D} " : "";

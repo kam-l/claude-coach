@@ -18,26 +18,38 @@ if (!DATA_DIR) process.exit(0);
 
 const MIN_TRANSCRIPT_BYTES = 10000; // Skip tiny transcripts (subagents, aborted sessions)
 const LOCK_FILE = path.join(DATA_DIR, "reflect.lock");
+const DEBUG = process.env.CLAUDE_COACH_DEBUG === "1";
+
+function log(msg) {
+  if (!DEBUG) return;
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.appendFileSync(path.join(DATA_DIR, "reflect-debug.log"),
+      `${new Date().toISOString()} [hook] ${msg}\n`);
+  } catch {}
+}
 
 try {
   const raw = fs.readFileSync(0, "utf-8");
-  if (!raw || raw.trim() === "") process.exit(0);
+  if (!raw || raw.trim() === "") { log("exit: empty stdin"); process.exit(0); }
 
   const data = JSON.parse(raw);
+  log(`event=${data.hook_event_name} agent_id=${data.agent_id || "none"} transcript=${data.transcript_path || "none"}`);
 
   // Must be a Stop event with transcript
-  if (data.hook_event_name !== "Stop") process.exit(0);
-  if (!data.transcript_path) process.exit(0);
+  if (data.hook_event_name !== "Stop") { log("exit: not Stop"); process.exit(0); }
+  if (!data.transcript_path) { log("exit: no transcript_path"); process.exit(0); }
 
   // Dedup: skip subagent Stops (agent_id present = subagent)
-  if (data.agent_id) process.exit(0);
+  if (data.agent_id) { log("exit: subagent"); process.exit(0); }
 
   // Dedup: skip trivial sessions (too small to learn from)
   try {
     const stat = fs.statSync(data.transcript_path);
-    if (stat.size < MIN_TRANSCRIPT_BYTES) process.exit(0);
-  } catch {
-    process.exit(0); // transcript missing
+    log(`transcript_size=${stat.size}`);
+    if (stat.size < MIN_TRANSCRIPT_BYTES) { log("exit: too small"); process.exit(0); }
+  } catch (e) {
+    log(`exit: transcript missing (${e.message})`); process.exit(0);
   }
 
   // Dedup: skip if another reflection is already running
@@ -45,7 +57,7 @@ try {
     if (fs.existsSync(LOCK_FILE)) {
       const lockContent = fs.readFileSync(LOCK_FILE, "utf-8");
       const lockTs = parseInt(lockContent.split("\n")[1], 10);
-      if (Date.now() - lockTs < 120000) process.exit(0); // within 2 min
+      if (Date.now() - lockTs < 120000) { log("exit: lock active"); process.exit(0); }
     }
   } catch {}
 
@@ -53,6 +65,7 @@ try {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 
   const pipelineScript = path.join(__dirname, "reflect-pipeline.js");
+  log(`spawning: ${pipelineScript}`);
   const child = spawn(process.execPath, [
     pipelineScript,
     data.transcript_path,
@@ -65,8 +78,10 @@ try {
     env: { ...process.env, CLAUDE_PLUGIN_DATA: DATA_DIR },
   });
   child.unref();
+  log(`spawned pid=${child.pid}`);
 
   process.exit(0);
-} catch {
+} catch (e) {
+  log(`error: ${e.message}`);
   process.exit(0);
 }
