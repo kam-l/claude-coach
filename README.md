@@ -1,9 +1,9 @@
 # claude-coach
 
-**Adversarial stress-testing, live session advisor, and 127 curated tips for Claude Code.**
+**Adversarial stress-testing, live session advisor, and 133 curated tips for Claude Code.**
 
 [![Claude Code Plugin](https://img.shields.io/badge/claude--code-plugin-8A2BE2)](https://code.claude.com/docs/en/plugins)
-[![tips](https://img.shields.io/badge/tips-127%20curated-orange)](tips.json)
+[![tips](https://img.shields.io/badge/tips-133%20curated-orange)](tips.json)
 [![tests](https://github.com/kam-l/claude-coach/actions/workflows/test.yml/badge.svg)](https://github.com/kam-l/claude-coach/actions/workflows/test.yml)
 [![version](https://img.shields.io/github/v/tag/kam-l/claude-coach?label=version&color=green)](https://github.com/kam-l/claude-coach/releases)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -12,7 +12,7 @@
 
 ![claude-coach showcase](showcase.gif)
 
-- **127 curated tips** — sourced from Boris Cherny, Anthropic docs, and community best practices
+- **133 curated tips** — sourced from Boris Cherny, Anthropic docs, and community best practices
 - **`/verify`** — auto-escalating adversarial verification (challenge, refine, or dialectic)
 - **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
 - **Frustration detection** — auto-routes to `/verify` when things go sideways (local regex, zero latency)
@@ -108,12 +108,12 @@ Or run `/claude-coach:setup install` for guided setup — it wires all of this a
 
 | Category | # | Examples |
 |----------|---|---------|
-| Workflow | 25 | Plan mode, `/rewind`, fan-out, "choose and commit", action-explicit phrasing |
-| Context | 23 | 200-line limit, `/compact` at 50%, data-at-top/query-at-bottom, quote grounding |
+| Workflow | 28 | Plan mode, `/rewind`, fan-out, "choose and commit", action-explicit phrasing |
+| Context | 24 | 200-line limit, `/compact` at 50%, data-at-top/query-at-bottom, quote grounding |
 | Agents | 19 | Test time compute, "say use subagents", pipeline gates, curb overuse |
-| Hooks | 11 | `exit 2` feedback, route permissions to Opus, Stop hook to nudge |
+| Hooks | 12 | `exit 2` feedback, route permissions to Opus, Stop hook to nudge |
 | Quality | 30 | Positive framing, add WHY, self-correct loops, "grill me — no PR until I pass" |
-| Performance | 19 | `/sandbox` (84% fewer prompts), CI budget caps, Opus with thinking |
+| Performance | 20 | `/sandbox` (84% fewer prompts), CI budget caps, Opus with thinking |
 
 ## User-Facing Commands
 

@@ -2,7 +2,10 @@
   "version": "4.3.0",
   "categories": {
     "workflow": [
-      "💡 `Shift+Tab` enters plan mode; `Ctrl+G` opens plan in your editor.",
+      "💡 `Shift+Tab` cycles modes: normal → plan → accept edits. Double-tap for plan mode.",
+      "💡 `Tab` toggles extended thinking mid-conversation — no restart needed.",
+      "💡 `Ctrl+G` opens your prompt in an external editor (e.g. VS Code) for long inputs.",
+      "💡 In plan mode, `Ctrl+G` to edit Claude's plan in your IDE — refine, then send back.",
       "💡 `/rewind` (Esc Esc) undoes off-track runs — cheaper than correcting.",
       "💡 Commit at least once per hour; stale work is lost work.",
       "💡 After two failed corrections, `/clear` and write a better prompt.",
@@ -41,6 +44,7 @@
       "💡 MCP servers load tool defs upfront — fewer tools = lower token cost.",
       "💡 Path-scoped rules in `.claude/rules/` load only when matching files opened.",
       "💡 Run `/init` to scaffold a starter `CLAUDE.md` from your project structure.",
+      "💡 4 layers: CLAUDE.md (rules) → Skills (knowledge) → Hooks (gates) → Agents (workers).",
       "💡 Use IMPORTANT/MUST for critical rules — emphasis improves model adherence.",
       "💡 Check `CLAUDE.md` into git — it compounds in value as your team contributes.",
       "💡 Over-specified CLAUDE.md? Convert rigid rules into hooks for guarantees.",
@@ -85,7 +89,8 @@
       "💡 PostToolUse on `Write|Edit` auto-runs formatter — beats CLAUDE.md.",
       "💡 Stop hook: nudge Claude to verify, keep going, or block until tests pass.",
       "💡 Hooks are deterministic; CLAUDE.md is advisory — use hooks for guarantees.",
-      "💡 Route permission requests to Opus via hook — auto-approve safe ones."
+      "💡 Route permission requests to Opus via hook — auto-approve safe ones.",
+      "💡 Deny `Read:*.env` and `Bash:sudo*` in permissions — safety baseline."
     ],
     "quality": [
       "💡 Share screenshots of visual bugs — Claude groks images faster than prose.",
@@ -133,6 +138,7 @@
       "💡 `/setup refresh` after adding commands/skills — surfaces them as spinner tips.",
       "💡 `/setup customize` to list all tips by category or add your own.",
       "💡 `/setup customize` to add custom tips — they persist across refreshes.",
+      "💡 `/doctor` checks your Claude Code installation health — run after upgrades.",
       "💡 Code intelligence plugins add precise symbol nav for typed languages.",
       "💡 `claude -p --output-format stream-json` pipes structured output to tools.",
       "💡 Voice dictation: speak 3x faster than typing, richer prompts.",
