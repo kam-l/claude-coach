@@ -10,7 +10,10 @@ Review pending session reflections — proposed memories and tips extracted from
 
 # Steps
 
-1. Read pending reflections from `${CLAUDE_PLUGIN_DATA}/pending-reflections/*.json`. If no `CLAUDE_PLUGIN_DATA`, fallback to `~/.claude/plugins/claude-coach/pending-reflections/`. If none found, tell the user and exit.
+1. Read pending reflections from the project JSONL:
+   - Derive project slug from the current working directory: strip trailing slashes, replace `:`, `\`, `/` with `-`
+   - Read `~/.claude/projects/{slug}/pending-reflections.jsonl` (one JSON object per line)
+   - If file doesn't exist or is empty, tell the user and exit
 
 2. For each pending reflection file, parse the JSON and **print as regular text output** (not inside AskUserQuestion):
    - Session timestamp and working directory
@@ -40,7 +43,7 @@ Review pending session reflections — proposed memories and tips extracted from
 6. For accepted tips:
    - Display the tip and suggest the user run `/setup refresh` to include it
 
-7. After processing, delete the pending reflection files that were reviewed.
+7. After processing, truncate `pending-reflections.jsonl` (clear the file).
 
 # Anti-patterns
 - Auto-applying without review — the whole point is human-in-the-loop

@@ -16,6 +16,7 @@
 - **`/verify`** — auto-escalating adversarial verification (challenge, refine, or dialectic)
 - **Sonnet advisor** — reads your transcript, injects session-specific coaching (⚠️ inject / ℹ️ display)
 - **Frustration detection** — auto-routes to `/verify` when things go sideways (local regex, zero latency)
+- **Session reflection** — auto-extracts learnings after each session, queues for `/reflect` review
 - **12 thinking lenses** — inversion, first-principles, pareto, second-order, and more
 
 ## Install
@@ -66,6 +67,16 @@ A detached Sonnet worker reads your session transcript and produces 1-3 tips gro
 ```
 
 When the advisor has *strong* advice, it's injected directly into Claude's context via `additionalContext`. Claude acts on the coaching without you having to relay it.
+
+### 💭 Session reflection (automatic)
+
+After each session ends, a detached Sonnet call extracts corrections, confirmations, and feedback patterns from the transcript. Results are queued as pending reflections — never auto-applied.
+
+```
+💭 2 pending reflections — /reflect to review
+```
+
+Run `/reflect` to review, accept, or discard. Accepted items become project memories or tips.
 
 ## Bundled Agents
 
@@ -121,6 +132,7 @@ Or run `/claude-coach:setup install` for guided setup — it wires all of this a
 |------------|------|-------------|
 | `/claude-coach:setup` | Skill | Install, uninstall, refresh tips, or customize |
 | `/claude-coach:verify` | Command | Auto-escalating adversarial verification |
+| `/claude-coach:reflect` | Command | Review pending session reflections |
 
 Internal (called by enrichment or `/verify` — not invoked directly):
 `question`, `challenge`, `refine`, `think`

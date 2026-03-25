@@ -22,7 +22,6 @@ const DATA_DIR = process.env.CLAUDE_PLUGIN_DATA;
 if (!DATA_DIR) process.exit(0);
 
 const LOCK_FILE = path.join(DATA_DIR, "reflect.lock");
-const PENDING_DIR = path.join(DATA_DIR, "pending-reflections");
 const HOME = os.homedir();
 
 const DEBUG = process.env.CLAUDE_COACH_DEBUG === "1";
@@ -86,8 +85,11 @@ function run() {
     return;
   }
 
-  // Write pending reflection
-  fs.mkdirSync(PENDING_DIR, { recursive: true });
+  // Append pending reflection to project JSONL
+  const slug = (cwd || "global").replace(/[/\\]+$/, "").replace(/[:\\/]/g, "-");
+  const projectDir = path.join(HOME, ".claude", "projects", slug);
+  fs.mkdirSync(projectDir, { recursive: true });
+  const pendingFile = path.join(projectDir, "pending-reflections.jsonl");
   const ts = Date.now();
   const pending = {
     timestamp: ts,
@@ -96,11 +98,8 @@ function run() {
     signals: result.signals,
     reflection: { memories: result.memories, tips: result.tips },
   };
-  fs.writeFileSync(
-    path.join(PENDING_DIR, `${ts}.json`),
-    JSON.stringify(pending, null, 2)
-  );
-  log(`wrote: ${ts}.json`);
+  fs.appendFileSync(pendingFile, JSON.stringify(pending) + "\n");
+  log(`appended to: ${pendingFile}`);
 }
 
 // ─── Transcript parsing ──────────────────────────────────────────

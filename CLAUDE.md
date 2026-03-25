@@ -9,7 +9,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - Worker calls `claude -p --model sonnet` — correct `claude -p` usage (standalone, no Claude Code context)
 - `reflect-pipeline.js` calls `claude -p --model sonnet` once — runs detached after session ends
 - Reflection pipeline: SessionEnd hook → Haiku extract signals → Sonnet generate reflections → pending JSON queue
-- Pending reflections live in `${CLAUDE_PLUGIN_DATA}/pending-reflections/` — never auto-applied
+- Pending reflections: `~/.claude/projects/{slug}/pending-reflections.jsonl` — append-only, cleared by `/reflect`
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing, `💭` = pending reflections
