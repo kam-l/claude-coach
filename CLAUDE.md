@@ -8,9 +8,8 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - `session-advisor.js` MUST fallback `CLAUDE_PLUGIN_DATA` to `~/.claude/plugins/claude-coach/` — library mode callers (custom statusline) don't have the env var
 - Worker calls `claude -p --model sonnet` — correct `claude -p` usage (standalone, no Claude Code context)
 - `reflect-pipeline.js` calls `claude -p --model haiku` then `claude -p --model sonnet` — runs detached after session ends
-- Reflection pipeline: Stop hook → Haiku extract signals → Sonnet generate reflections → pending JSON queue
+- Reflection pipeline: SessionEnd hook → Haiku extract signals → Sonnet generate reflections → pending JSON queue
 - Pending reflections live in `${CLAUDE_PLUGIN_DATA}/pending-reflections/` — never auto-applied
-- Stop hook fires per subagent too — `reflect-hook.js` deduplicates via `agent_id` field (present on subagents, absent on main session)
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing, `💭` = pending reflections
@@ -24,8 +23,8 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 ## Reflection Pipeline
 
 ```
-Stop hook (reflect-hook.js) → detached child (reflect-pipeline.js)
-  Gates: CLAUDE_PLUGIN_DATA exists, event=Stop, no agent_id, transcript >10KB, no active lock
+SessionEnd hook (reflect-hook.js) → detached child (reflect-pipeline.js)
+  Gates: CLAUDE_PLUGIN_DATA exists, event=SessionEnd, transcript >10KB, no active lock
   Stage 1: Haiku extracts signals (correction > approval > observation)
   Stage 2: Sonnet generates memory patches + tips (only if signals found)
   Output: ${CLAUDE_PLUGIN_DATA}/pending-reflections/{timestamp}.json
@@ -33,7 +32,7 @@ Stop hook (reflect-hook.js) → detached child (reflect-pipeline.js)
 ```
 
 - Transcript is JSONL at `~/.claude/projects/{slug}/{session-id}.jsonl` — filter to `type: "user"` and `type: "assistant"`
-- Stop stdin fields: `session_id`, `transcript_path`, `cwd`, `permission_mode`, `hook_event_name`, `stop_hook_active`, `last_assistant_message`
+- SessionEnd stdin fields: `session_id`, `transcript_path`, `cwd`, `hook_event_name`
 - `claude -p` works from detached subprocess post-teardown (~9s Haiku latency)
 - Cost ceiling: ~$0.05/session (cumulative Haiku budget $0.04, Sonnet $0.04 per-call cap)
 - Lock file `reflect.lock` prevents concurrent pipelines; stale lock recovery after 5 min

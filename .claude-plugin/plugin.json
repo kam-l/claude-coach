@@ -1,18 +1,6 @@
 {
   "name": "claude-coach",
-  "version": "4.7.14",
+  "version": "4.7.15",
   "description": "Adversarial stress-testing, live session advisor, and 133 curated tips for Claude Code.",
-  "author": { "name": "kam-l" },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/reflect-hook.js"
-          }
-        ]
-      }
-    ]
-  }
+  "author": { "name": "kam-l" }
 }

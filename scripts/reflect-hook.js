@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 /**
- * Stop hook — spawns detached reflection pipeline.
+ * SessionEnd hook — spawns detached reflection pipeline.
  *
  * Fast and sync: reads stdin, validates, spawns child, exits.
  * Fail-open: errors never block session teardown.
- *
- * Dedup: skips subagent Stop events via agent_id field (present on subagents,
- * absent on main session). Falls back to transcript size check.
  */
 
 const fs = require("fs");
@@ -36,12 +33,9 @@ try {
   const data = JSON.parse(raw);
   log(`event=${data.hook_event_name} agent_id=${data.agent_id || "none"} transcript=${data.transcript_path || "none"}`);
 
-  // Must be a Stop event with transcript
-  if (data.hook_event_name !== "Stop") { log("exit: not Stop"); process.exit(0); }
+  // Must be a SessionEnd event with transcript
+  if (data.hook_event_name !== "SessionEnd") { log("exit: not SessionEnd"); process.exit(0); }
   if (!data.transcript_path) { log("exit: no transcript_path"); process.exit(0); }
-
-  // Dedup: skip subagent Stops (agent_id present = subagent)
-  if (data.agent_id) { log("exit: subagent"); process.exit(0); }
 
   // Dedup: skip trivial sessions (too small to learn from)
   try {

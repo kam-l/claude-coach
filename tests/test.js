@@ -65,7 +65,26 @@ assert(fs.existsSync(path.join(ROOT, ".claude-plugin", "plugin.json")), "plugin.
 assert(fs.existsSync(path.join(ROOT, "scripts", "session-advisor.js")), "session-advisor.js exists");
 assert(fs.existsSync(path.join(ROOT, "scripts", "install-statusline.js")), "install-statusline.js exists");
 assert(fs.existsSync(path.join(ROOT, "hooks", "hooks.json")), "hooks.json exists");
+assert(fs.existsSync(path.join(ROOT, "scripts", "reflect-hook.js")), "reflect-hook.js exists");
 assert(!fs.existsSync(path.join(ROOT, "scripts", "postinstall.js")), "no postinstall.js (npm path removed)");
+
+// ─── Wiring: hooks.json events ──────────────────────────────────
+
+describe("hooks.json events");
+
+const hooksJson = JSON.parse(fs.readFileSync(path.join(ROOT, "hooks", "hooks.json"), "utf-8"));
+const hookEvents = Object.keys(hooksJson.hooks || hooksJson);
+assert(hookEvents.includes("SessionEnd"), "reflect hook uses SessionEnd (not Stop)");
+assert(!hookEvents.includes("Stop"), "no Stop hook (use SessionEnd for post-session)");
+assert(hookEvents.includes("UserPromptSubmit"), "UserPromptSubmit hook registered");
+
+// ─── Unit: reflect-hook.js event gate ───────────────────────────
+
+describe("reflect-hook.js event gate");
+
+const reflectSrc = fs.readFileSync(path.join(ROOT, "scripts", "reflect-hook.js"), "utf-8");
+assert(reflectSrc.includes('"SessionEnd"'), "reflect-hook checks for SessionEnd event");
+assert(!reflectSrc.includes('"Stop"'), "reflect-hook does not check for Stop event");
 
 // ─── Unit: tips.json schema ──────────────────────────────────────
 
