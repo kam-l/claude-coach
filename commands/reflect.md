@@ -12,18 +12,23 @@ Review pending session reflections — proposed memories and tips extracted from
 
 1. Read pending reflections from `${CLAUDE_PLUGIN_DATA}/pending-reflections/*.json`. If no `CLAUDE_PLUGIN_DATA`, fallback to `~/.claude/plugins/claude-coach/pending-reflections/`. If none found, tell the user and exit.
 
-2. For each pending reflection file, parse the JSON and display:
+2. For each pending reflection file, parse the JSON and **print as regular text output** (not inside AskUserQuestion):
    - Session timestamp and working directory
-   - Extracted signals with tier label (correction / approval / observation)
-   - Proposed memories and tips
+   - Extracted signals as a numbered list with tier label (correction / approval / observation)
+   - Each proposed memory: name, type, and full content
+   - Each proposed tip: the tip text verbatim
 
 3. If `$ARGUMENTS` is "accept-all", apply all reflections without prompting (batch mode).
 
-4. Otherwise, for each reflection use `AskUserQuestion` with choices:
+4. Otherwise, AFTER printing the content, use `AskUserQuestion` with a SHORT action-only prompt:
+   - Question: "Action for this reflection?" (keep it short — all detail was already printed above)
    - **Accept all** — apply all proposed memories and tips from this reflection
    - **Cherry-pick** — show each memory/tip individually for accept/reject
    - **Skip** — discard this reflection entirely
-   - **Edit** — user provides modified version via Other
+
+   For cherry-pick mode, loop through each memory and tip with a separate AskUserQuestion:
+   - Question: "Accept {name}?"
+   - **Accept** / **Skip**
 
 5. For accepted memories:
    - Derive project slug from the reflection's `cwd` field: strip trailing slashes, replace `:`, `\`, `/` with `-` (e.g., `C:\Projects\foo` → `C--Projects-foo`)

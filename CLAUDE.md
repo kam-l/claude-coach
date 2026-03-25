@@ -7,7 +7,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - `session-advisor.js` is dual-mode (library + worker). Both must work after edits.
 - `session-advisor.js` MUST fallback `CLAUDE_PLUGIN_DATA` to `~/.claude/plugins/claude-coach/` — library mode callers (custom statusline) don't have the env var
 - Worker calls `claude -p --model sonnet` — correct `claude -p` usage (standalone, no Claude Code context)
-- `reflect-pipeline.js` calls `claude -p --model haiku` then `claude -p --model sonnet` — runs detached after session ends
+- `reflect-pipeline.js` calls `claude -p --model sonnet` once — runs detached after session ends
 - Reflection pipeline: SessionEnd hook → Haiku extract signals → Sonnet generate reflections → pending JSON queue
 - Pending reflections live in `${CLAUDE_PLUGIN_DATA}/pending-reflections/` — never auto-applied
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
@@ -25,16 +25,14 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 ```
 SessionEnd hook (reflect-hook.js) → detached child (reflect-pipeline.js)
   Gates: CLAUDE_PLUGIN_DATA exists, event=SessionEnd, transcript >10KB, no active lock
-  Stage 1: Haiku extracts signals (correction > approval > observation)
-  Stage 2: Sonnet generates memory patches + tips (only if signals found)
+  Single Sonnet call: extract signals + generate memory patches + tips
   Output: ${CLAUDE_PLUGIN_DATA}/pending-reflections/{timestamp}.json
   Statusline: 💭 shows pending count → /reflect to review
 ```
 
 - Transcript is JSONL at `~/.claude/projects/{slug}/{session-id}.jsonl` — filter to `type: "user"` and `type: "assistant"`
 - SessionEnd stdin fields: `session_id`, `transcript_path`, `cwd`, `hook_event_name`
-- `claude -p` works from detached subprocess post-teardown (~9s Haiku latency)
-- Cost ceiling: ~$0.05/session (cumulative Haiku budget $0.04, Sonnet $0.04 per-call cap)
+- Single `claude -p --model sonnet` call (~10s latency, $0.05 budget cap)
 - Lock file `reflect.lock` prevents concurrent pipelines; stale lock recovery after 5 min
 - Sessions with no corrections/confirmations/feedback produce 0 signals — this is expected
 

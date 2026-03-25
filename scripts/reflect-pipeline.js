@@ -2,17 +2,13 @@
 /**
  * Reflection pipeline — runs as detached child after session ends.
  *
- * Stage 1 (Haiku): Extract signals from transcript.
- *   Input: user+assistant conversation lines
- *   Output: { signals: [{type, quote, context}], has_learnings: bool }
- *
- * Stage 2 (Sonnet): Generate reflections from signals.
- *   Input: extracted signals + MEMORY.md content
+ * Single Sonnet call: extract signals + generate reflections in one pass.
+ *   Input: user+assistant conversation lines + existing MEMORY.md
  *   Output: { memories: [{name, content}], tips: [string] }
  *
  * Result: Written to ${CLAUDE_PLUGIN_DATA}/pending-reflections/{timestamp}.json
  *
- * Cost ceiling: ~$0.05/session target. Haiku budget tracked cumulatively ($0.04 cap), Sonnet capped at $0.04 per call.
+ * Cost ceiling: ~$0.05/session (single claude -p call, capped via --max-budget-usd).
  *
  * Usage: node reflect-pipeline.js <transcript_path> <session_id> [cwd]
  */
@@ -28,10 +24,6 @@ if (!DATA_DIR) process.exit(0);
 const LOCK_FILE = path.join(DATA_DIR, "reflect.lock");
 const PENDING_DIR = path.join(DATA_DIR, "pending-reflections");
 const HOME = os.homedir();
-
-// Haiku token budget per chunk (~4 chars/token, leave room for prompt)
-const CHUNK_CHARS = 24000; // ~6k tokens of transcript per Haiku call
-const MAX_HAIKU_CALLS = 8; // $0.05 ceiling with margin
 
 const DEBUG = process.env.CLAUDE_COACH_DEBUG === "1";
 
@@ -85,17 +77,14 @@ function run() {
   log(`transcript lines=${lines ? lines.length : 0}`);
   if (!lines || lines.length < 20) { log("exit: too few lines"); return; }
 
-  // Stage 1: Haiku extraction
-  log("stage1: haiku extraction");
-  const signals = extractSignals(lines);
-  log(`signals=${signals ? signals.length : 0}`);
-  if (!signals || signals.length === 0) { log("exit: no signals"); return; }
-
-  // Stage 2: Sonnet reflection
-  log("stage2: sonnet reflection");
-  const reflection = generateReflection(signals);
-  log(`reflection: memories=${reflection?.memories?.length || 0} tips=${reflection?.tips?.length || 0}`);
-  if (!reflection) { log("exit: no reflection"); return; }
+  // Single Sonnet call: extract + reflect
+  log("sonnet: extract + reflect");
+  const result = extractAndReflect(lines);
+  log(`result: memories=${result?.memories?.length || 0} tips=${result?.tips?.length || 0} signals=${result?.signals?.length || 0}`);
+  if (!result || (result.memories.length === 0 && result.tips.length === 0)) {
+    log("exit: no reflections");
+    return;
+  }
 
   // Write pending reflection
   fs.mkdirSync(PENDING_DIR, { recursive: true });
@@ -104,13 +93,14 @@ function run() {
     timestamp: ts,
     session_id: sessionId,
     cwd: cwd || null,
-    signals,
-    reflection,
+    signals: result.signals,
+    reflection: { memories: result.memories, tips: result.tips },
   };
   fs.writeFileSync(
     path.join(PENDING_DIR, `${ts}.json`),
     JSON.stringify(pending, null, 2)
   );
+  log(`wrote: ${ts}.json`);
 }
 
 // ─── Transcript parsing ──────────────────────────────────────────
@@ -153,56 +143,24 @@ function readTranscript(jsonlPath) {
   }
 }
 
-// ─── Stage 1: Haiku extraction ───────────────────────────────────
+// ─── Single-pass extraction + reflection ─────────────────────────
 
-function extractSignals(lines) {
-  // Build conversation text, chunked for Haiku
-  const chunks = chunkConversation(lines);
-  const allSignals = [];
-  let cumulativeCost = 0;
-  const HAIKU_BUDGET = 0.04; // Reserve $0.01 for Sonnet from $0.05 total
-
-  for (const chunk of chunks.slice(0, MAX_HAIKU_CALLS)) {
-    if (cumulativeCost >= HAIKU_BUDGET) break;
-    const { signals, cost } = runHaikuExtraction(chunk);
-    cumulativeCost += cost || 0;
-    if (signals) allSignals.push(...signals);
-  }
-
-  // Deduplicate by quote similarity
-  return deduplicateSignals(allSignals);
-}
-
-function chunkConversation(lines) {
-  const chunks = [];
-  let current = [];
-  let currentLen = 0;
-
+function extractAndReflect(lines) {
+  // Build conversation text, truncated to fit budget
+  const maxChars = 48000; // ~12k tokens, leaves room for prompt + response
+  let text = "";
   for (const line of lines) {
-    const text = `[${line.role}]: ${line.content}`;
-    const len = text.length;
-
-    if (currentLen + len > CHUNK_CHARS && current.length > 0) {
-      chunks.push(current.join("\n\n"));
-      current = [];
-      currentLen = 0;
-    }
-
-    current.push(text);
-    currentLen += len;
+    const entry = `[${line.role}]: ${line.content}\n\n`;
+    if (text.length + entry.length > maxChars) break;
+    text += entry;
   }
 
-  if (current.length > 0) {
-    chunks.push(current.join("\n\n"));
-  }
+  const memoryContent = readMemoryIndex();
 
-  return chunks;
-}
+  const prompt = `Analyze this Claude Code session transcript. Extract learning signals and generate reflections in one pass.
 
-function runHaikuExtraction(chunk) {
-  const prompt = `Extract learning signals from this Claude Code session transcript.
+## Step 1: Find signals
 
-Look for:
 FROM USER TURNS:
 - Corrections: user tells Claude it did something wrong, or redirects approach
 - Confirmations: user validates a non-obvious choice ("yes exactly", "perfect", accepting unusual approach)
@@ -211,67 +169,29 @@ FROM USER TURNS:
 FROM ASSISTANT TURNS:
 - Stated assumptions that were later corrected
 - Rejected alternatives that the user brought back
-- Caveats that turned out to matter
 
-Signal types (categorical):
-- "correction" — user corrected Claude's approach or output
-- "approval" — user confirmed a non-obvious approach worked
-- "observation" — interesting pattern worth noting but not directly actionable
+Skip routine operations, generic positive feedback, tool errors that were just retried.
 
-Skip:
-- Routine operations (file reads, test runs, standard coding)
-- Generic positive feedback ("thanks", "ok", "looks good" without non-obvious context)
-- Tool errors that were just retried successfully
+## Step 2: Generate reflections from signals found
 
-## Transcript
-${chunk}
+- Memory: durable fact (preference, pattern, constraint) worth preserving across sessions
+- Tip: actionable statusline hint (💡 prefix, max 120 chars)
+- Skip signals too session-specific to generalize
+- Skip anything already covered in existing memory below
+- Memory format: name (kebab-case), description (one-line for index), type (feedback|user|project), content (lead with rule, then Why: and How to apply:)
+- Tip format: "💡 " prefix, max 120 chars
 
-## Output
-ONLY a JSON object — no markdown fences, no commentary.
-{"signals":[{"type":"correction|approval|observation","quote":"exact short quote from transcript","context":"one-line explanation of what was learned"}],"has_learnings":true}
-
-If nothing worth learning → {"signals":[],"has_learnings":false}`;
-
-  const { output, cost } = callClaude("haiku", prompt);
-  if (!output) return { signals: null, cost };
-
-  try {
-    const parsed = JSON.parse(output);
-    if (!parsed.has_learnings || !Array.isArray(parsed.signals)) return { signals: null, cost };
-    return { signals: parsed.signals.filter(s => s.type && s.quote && s.context), cost };
-  } catch {
-    return { signals: null, cost };
-  }
-}
-
-// ─── Stage 2: Sonnet reflection ──────────────────────────────────
-
-function generateReflection(signals) {
-  // Read existing memory for context
-  const memoryContent = readMemoryIndex();
-
-  const signalText = signals.map((s, i) =>
-    `${i + 1}. [${s.type}] "${s.quote}" — ${s.context}`
-  ).join("\n");
-
-  const prompt = `Generate memory patches and tips from these session signals. Each memory should be a durable fact (preference, pattern, constraint) worth preserving across sessions. Each tip should be an actionable statusline hint (💡 prefix, max 120 chars).
-
-## Signals
-${signalText}
-
-## Existing memory (skip anything already covered)
+## Existing memory (skip duplicates)
 ${memoryContent || "(no existing memory found)"}
 
-## Rules
-- Skip signals that are too session-specific to generalize or are routine operations
-- Memory format: name (kebab-case), description (one-line for index), type (feedback|user|project), content (lead with the rule, then Why: and How to apply: lines)
-- Tip format: "💡 " prefix, max 120 chars, actionable for the human operator
+## Transcript
+${text}
 
 ## Output
 ONLY a JSON object — no markdown fences, no commentary.
-{"memories":[{"name":"short-kebab-name","description":"one-line for MEMORY.md index","type":"feedback|user|project","content":"the memory content"}],"tips":["💡 tip text"]}
+{"signals":[{"type":"correction|approval|observation","quote":"exact short quote","context":"what was learned"}],"memories":[{"name":"kebab-name","description":"one-line","type":"feedback|user|project","content":"the content"}],"tips":["💡 tip text"]}
 
-If nothing worth keeping → {"memories":[],"tips":[]}`;
+If nothing worth learning → {"signals":[],"memories":[],"tips":[]}`;
 
   const { output } = callClaude("sonnet", prompt);
   if (!output) return null;
@@ -279,6 +199,7 @@ If nothing worth keeping → {"memories":[],"tips":[]}`;
   try {
     const parsed = JSON.parse(output);
     return {
+      signals: Array.isArray(parsed.signals) ? parsed.signals : [],
       memories: Array.isArray(parsed.memories) ? parsed.memories : [],
       tips: Array.isArray(parsed.tips) ? parsed.tips : [],
     };
@@ -291,7 +212,6 @@ function readMemoryIndex() {
   // Try project-scoped memory first, then global
   const projectMemoryDir = path.join(HOME, ".claude", "projects");
   try {
-    // Find the right project memory by matching cwd
     if (cwd) {
       const slug = cwd.replace(/[/\\]+$/, "").replace(/[:\\/]/g, "-");
       const memPath = path.join(projectMemoryDir, slug, "memory", "MEMORY.md");
@@ -328,13 +248,8 @@ function callClaude(model, prompt) {
     "--system-prompt", "",
     "--disable-slash-commands",
     "--no-session-persistence",
+    "--max-budget-usd", "0.05",
   ];
-
-  if (model === "haiku") {
-    args.push("--max-budget-usd", "0.01");
-  } else {
-    args.push("--max-budget-usd", "0.04");
-  }
 
   const result = spawnSync(claudePath, args, {
     input: prompt,
@@ -369,14 +284,4 @@ function resolveClaudePath() {
     if (firstLine) return firstLine;
   } catch {}
   return "claude";
-}
-
-function deduplicateSignals(signals) {
-  const seen = new Set();
-  return signals.filter(s => {
-    const key = s.quote.toLowerCase().slice(0, 50);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
