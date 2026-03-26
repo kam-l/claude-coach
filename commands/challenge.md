@@ -1,5 +1,5 @@
 ---
-# Internal: called by /verify when classification = challenge
+disable-model-invocation: true
 argument-hint: [target]
 ---
 

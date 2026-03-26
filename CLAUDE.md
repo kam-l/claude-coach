@@ -8,17 +8,16 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - `session-advisor.js` MUST fallback `CLAUDE_PLUGIN_DATA` to `~/.claude/plugins/claude-coach/` — library mode callers (custom statusline) don't have the env var
 - Worker calls `claude -p --model sonnet` — correct `claude -p` usage (standalone, no Claude Code context)
 - `reflect-pipeline.js` calls `claude -p --model sonnet` once — runs detached after session ends
-- Reflection pipeline: SessionEnd hook → Haiku extract signals → Sonnet generate reflections → pending JSON queue
-- Pending reflections: `~/.claude/projects/{slug}/pending-reflections.jsonl` — append-only, cleared by `/reflect`
+- Reflection pipeline: SessionEnd hook → single Sonnet call (extract signals + generate reflections) → pending JSONL
+- Pending reflections: `~/.claude/projects/{slug}/pending-reflections.jsonl` — append-only, per-project, cleared by `/reflect`
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing, `💭` = pending reflections
-- `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — `--wire` detects existing statusline (ccstatusline, claude-hud, custom) and wires coach integration
+- `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — `--wire` detects existing statusline and generates a universal aggregator wrapper (forks stdin to original command, appends coach output) at `${CLAUDE_PLUGIN_DATA}/statusline-aggregator.js`
 - Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
 - Mutable data (cache, logs, setup-context, pending-reflections) lives under `${CLAUDE_PLUGIN_DATA}`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (minutes, default 5), `CLAUDE_COACH_COSTS` (show cost in statusline)
 - Env vars: `CLAUDE_COACH_DEBUG` (enable debug logging to `${CLAUDE_PLUGIN_DATA}/reflect-debug.log`)
-- Env vars: `GROQ_API_KEY` and `ANTHROPIC_API_KEY` no longer required (API classifier removed)
 
 ## Reflection Pipeline
 
@@ -26,7 +25,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 SessionEnd hook (reflect-hook.js) → detached child (reflect-pipeline.js)
   Gates: CLAUDE_PLUGIN_DATA exists, event=SessionEnd, transcript >10KB, no active lock
   Single Sonnet call: extract signals + generate memory patches + tips
-  Output: ${CLAUDE_PLUGIN_DATA}/pending-reflections/{timestamp}.json
+  Output: ~/.claude/projects/{slug}/pending-reflections.jsonl (append)
   Statusline: 💭 shows pending count → /reflect to review
 ```
 
@@ -40,7 +39,7 @@ SessionEnd hook (reflect-hook.js) → detached child (reflect-pipeline.js)
 
 - `/setup [install|uninstall|refresh|customize]` — skill: install, remove, refresh tips, or explain plugin
 - `/verify [target]` — user-callable command; auto-escalates to challenge, refine, or think
-- `/reflect [accept-all]` — review pending session reflections; accept/reject/edit proposed memories and tips
+- `/reflect [accept-all]` — review pending reflections: memories, tips, CLAUDE.md patches, skill patches
 - `/question`, `/challenge`, `/refine`, `/think` — internal (called by enrichment or /verify, no description = hidden from tips)
 - After adding/changing commands: run `/setup refresh` to surface them as spinner tips
 - Shared helpers in `scripts/helpers.js` — `extractFrontmatter`, `findFiles`, `safeRead`, `safeJSON`

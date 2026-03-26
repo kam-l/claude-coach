@@ -4,9 +4,9 @@
  *
  * Single Sonnet call: extract signals + generate reflections in one pass.
  *   Input: user+assistant conversation lines + existing MEMORY.md
- *   Output: { memories: [{name, content}], tips: [string] }
+ *   Output: { memories, tips, claude_md_patches, skill_patches }
  *
- * Result: Written to ${CLAUDE_PLUGIN_DATA}/pending-reflections/{timestamp}.json
+ * Result: Appended to ~/.claude/projects/{slug}/pending-reflections.jsonl
  *
  * Cost ceiling: ~$0.05/session (single claude -p call, capped via --max-budget-usd).
  *
@@ -79,8 +79,9 @@ function run() {
   // Single Sonnet call: extract + reflect
   log("sonnet: extract + reflect");
   const result = extractAndReflect(lines);
-  log(`result: memories=${result?.memories?.length || 0} tips=${result?.tips?.length || 0} signals=${result?.signals?.length || 0}`);
-  if (!result || (result.memories.length === 0 && result.tips.length === 0)) {
+  log(`result: memories=${result?.memories?.length || 0} tips=${result?.tips?.length || 0} claude_md=${result?.claude_md_patches?.length || 0} skills=${result?.skill_patches?.length || 0} signals=${result?.signals?.length || 0}`);
+  const hasReflections = result && (result.memories.length + result.tips.length + result.claude_md_patches.length + result.skill_patches.length > 0);
+  if (!hasReflections) {
     log("exit: no reflections");
     return;
   }
@@ -96,7 +97,12 @@ function run() {
     session_id: sessionId,
     cwd: cwd || null,
     signals: result.signals,
-    reflection: { memories: result.memories, tips: result.tips },
+    reflection: {
+      memories: result.memories,
+      tips: result.tips,
+      claude_md_patches: result.claude_md_patches,
+      skill_patches: result.skill_patches,
+    },
   };
   fs.appendFileSync(pendingFile, JSON.stringify(pending) + "\n");
   log(`appended to: ${pendingFile}`);
@@ -155,6 +161,7 @@ function extractAndReflect(lines) {
   }
 
   const memoryContent = readMemoryIndex();
+  const claudeMdContent = readClaudeMd();
 
   const prompt = `Analyze this Claude Code session transcript. Extract learning signals and generate reflections in one pass.
 
@@ -173,12 +180,16 @@ Skip routine operations, generic positive feedback, tool errors that were just r
 
 ## Step 2: Generate reflections from signals found
 
-- Memory: durable fact (preference, pattern, constraint) worth preserving across sessions
-- Tip: actionable statusline hint (💡 prefix, max 120 chars)
-- Skip signals too session-specific to generalize
-- Skip anything already covered in existing memory below
-- Memory format: name (kebab-case), description (one-line for index), type (feedback|user|project), content (lead with rule, then Why: and How to apply:)
-- Tip format: "💡 " prefix, max 120 chars
+Route each learning to the right target:
+- **Memory**: durable fact (preference, pattern, constraint) worth preserving across sessions. Format: name (kebab-case), description (one-line), type (feedback|user|project), content (lead with rule, then Why: and How to apply:)
+- **Tip**: actionable statusline hint. Format: "💡 " prefix, max 120 chars
+- **CLAUDE.md patch**: new invariant, convention, or key fact that should be in CLAUDE.md. Only propose if it would prevent a repeated mistake or captures a non-obvious architectural decision. Format: section (which ## heading it belongs under), content (the line(s) to add)
+- **Skill patch**: new workflow step, anti-pattern, or trigger phrase for an existing skill. Format: skill_name, section, content
+
+Skip signals too session-specific to generalize. Skip anything already covered below.
+
+## Existing CLAUDE.md (skip duplicates)
+${claudeMdContent || "(no CLAUDE.md found)"}
 
 ## Existing memory (skip duplicates)
 ${memoryContent || "(no existing memory found)"}
@@ -188,9 +199,9 @@ ${text}
 
 ## Output
 ONLY a JSON object — no markdown fences, no commentary.
-{"signals":[{"type":"correction|approval|observation","quote":"exact short quote","context":"what was learned"}],"memories":[{"name":"kebab-name","description":"one-line","type":"feedback|user|project","content":"the content"}],"tips":["💡 tip text"]}
+{"signals":[{"type":"correction|approval|observation","quote":"exact short quote","context":"what was learned"}],"memories":[{"name":"kebab-name","description":"one-line","type":"feedback|user|project","content":"the content"}],"tips":["💡 tip text"],"claude_md_patches":[{"section":"## Section Name","content":"- the line to add"}],"skill_patches":[{"skill_name":"skill-name","section":"## Section","content":"the content to add"}]}
 
-If nothing worth learning → {"signals":[],"memories":[],"tips":[]}`;
+If nothing worth learning → {"signals":[],"memories":[],"tips":[],"claude_md_patches":[],"skill_patches":[]}`;
 
   const { output } = callClaude("sonnet", prompt);
   if (!output) return null;
@@ -201,6 +212,8 @@ If nothing worth learning → {"signals":[],"memories":[],"tips":[]}`;
       signals: Array.isArray(parsed.signals) ? parsed.signals : [],
       memories: Array.isArray(parsed.memories) ? parsed.memories : [],
       tips: Array.isArray(parsed.tips) ? parsed.tips : [],
+      claude_md_patches: Array.isArray(parsed.claude_md_patches) ? parsed.claude_md_patches : [],
+      skill_patches: Array.isArray(parsed.skill_patches) ? parsed.skill_patches : [],
     };
   } catch {
     return null;
@@ -228,6 +241,17 @@ function readMemoryIndex() {
     }
   } catch {}
 
+  return null;
+}
+
+function readClaudeMd() {
+  if (!cwd) return null;
+  try {
+    const claudeMdPath = path.join(cwd, "CLAUDE.md");
+    if (fs.existsSync(claudeMdPath)) {
+      return fs.readFileSync(claudeMdPath, "utf-8").slice(0, 4000);
+    }
+  } catch {}
   return null;
 }
 

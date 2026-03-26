@@ -96,12 +96,12 @@ function getSessionAdvice({ sessionId, cwd } = {}) {
   // Gate: advisor disabled → fallback
   const envVal = process.env.CLAUDE_COACH;
   if (!envVal || envVal === "0") {
-    return fallbackTip();
+    return fallbackTip(false, cwd);
   }
 
   // No session ID → fallback
   if (!sessionId) {
-    return fallbackTip();
+    return fallbackTip(false, cwd);
   }
 
   // Try reading cache
@@ -123,7 +123,7 @@ function getSessionAdvice({ sessionId, cwd } = {}) {
   // Return fallback for this render cycle; show 🔍 while worker is active
   const lock = lockPath(sessionId);
   const analyzing = fs.existsSync(lock) && !isLockStale(lock);
-  return fallbackTip(analyzing);
+  return fallbackTip(analyzing, cwd);
 }
 
 function readCache(sid) {
@@ -135,19 +135,21 @@ function readCache(sid) {
   }
 }
 
-function pendingReflectionCount() {
+function pendingReflectionCount(cwd) {
   try {
-    const dir = path.join(DATA_DIR, "pending-reflections");
-    if (!fs.existsSync(dir)) return 0;
-    return fs.readdirSync(dir).filter(f => f.endsWith(".json")).length;
+    const slug = (cwd || "global").replace(/[/\\]+$/, "").replace(/[:\\/]/g, "-");
+    const file = path.join(HOME, ".claude", "projects", slug, "pending-reflections.jsonl");
+    if (!fs.existsSync(file)) return 0;
+    const lines = fs.readFileSync(file, "utf-8").trim().split("\n").filter(Boolean);
+    return lines.length;
   } catch {
     return 0;
   }
 }
 
-function fallbackTip(analyzing) {
+function fallbackTip(analyzing, cwd) {
   const pool = loadTips();
-  const pending = pendingReflectionCount();
+  const pending = pendingReflectionCount(cwd);
   if (pending > 0) {
     return `\n${FG}💭 ${pending} pending reflection${pending > 1 ? "s" : ""} — /reflect to review${RST}`;
   }

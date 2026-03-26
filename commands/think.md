@@ -1,9 +1,7 @@
 ---
-# Internal: called by /verify when classification = think
+disable-model-invocation: true
 argument-hint: [claim-or-design-to-challenge]
 ---
-
-<workflow>
 
 1. Ultrathink on $ARGUMENTS. Decompose into:
    - **Claims**: Every debatable assertion, implicit or explicit. Restate each as a clear, single-sentence thesis.
@@ -35,11 +33,7 @@ argument-hint: [claim-or-design-to-challenge]
 
 5. `AskUserQuestion` with the synthesis, key tensions, and decision points for the user to weigh in on.
 
-</workflow>
-
-<constraints>
+## Constraints
 
 - NEVER spawn agents outside of a team
 - `attacker` and `defender` agents **MUST** be spawned inside a **TEAM**
-  
-</constraints>

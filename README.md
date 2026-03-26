@@ -54,7 +54,7 @@ One user-facing command — `/verify` — auto-escalates based on what you point
 
 ### 💡 Spinner tips (always on, zero cost)
 
-127 hand-curated tips (sourced from Boris Cherny, Anthropic team best practices, and community) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
+133 hand-curated tips (sourced from Boris Cherny, Anthropic team best practices, and community) rotate during tool calls. Passive reinforcement — you glance at them while waiting.
 
 ### ℹ️ Sonnet advisor (opt-in)
 
@@ -70,13 +70,13 @@ When the advisor has *strong* advice, it's injected directly into Claude's conte
 
 ### 💭 Session reflection (automatic)
 
-After each session ends, a detached Sonnet call extracts corrections, confirmations, and feedback patterns from the transcript. Results are queued as pending reflections — never auto-applied.
+After each session ends, a detached Sonnet call extracts corrections, confirmations, and feedback patterns from the transcript. Results are routed to the right target and queued as pending reflections — never auto-applied.
 
 ```
 💭 2 pending reflections — /reflect to review
 ```
 
-Run `/reflect` to review, accept, or discard. Accepted items become project memories or tips.
+Run `/reflect` to review, accept, or discard. Accepted items become project memories, tips, CLAUDE.md patches, or skill patches.
 
 ## Bundled Agents
 

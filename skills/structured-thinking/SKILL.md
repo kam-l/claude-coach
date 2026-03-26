@@ -1,11 +1,11 @@
 ---
 description: "Apply thinking frameworks (inversion, first-principles, pareto, etc.) to analyze decisions, claims, or problems. Also triggers on: \"weigh pros and cons\", \"help me decide\", \"evaluate trade-offs\", \"think this through\", \"analyze from X perspective\", \"what am I missing\", \"second-order effects\", \"reframe this\", \"what would happen if\", or any request for structured analytical reasoning about a decision or claim."
 user-invocable: false
-argument-hint: [lens] on [topic/decision]
+argument-hint: "[lens] on [topic/decision]"
 remote: true
 ---
 
-You MUST Read the selected reference file from `references/` before applying any framework.
+Read the selected reference file from `references/` before applying any framework — applying without reading produces incorrect output formats.
 
 ## Intake
 
