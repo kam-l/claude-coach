@@ -40,13 +40,11 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mine-setup.js"
 
 ## 4. Wire statusline
 
-Check `statusLine` in `.claude/settings.local.json` -> `.claude/settings.json` -> `~/.claude/settings.json` (first wins).
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/install-statusline.js" --wire
+```
 
-| State | Action |
-|-------|--------|
-| Prior claude-coach version (regex: `/statusline-tip\|session-advisor/`) | Replace `statusLine` command with new path |
-| Unrelated script exists | Do NOT replace. Read target script first. Append coach require + tip output. `AskUserQuestion` with diff before editing. |
-| No statusline | Register in `~/.claude/settings.json`: `"statusLine": {"type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/statusline-tips.js\""}` |
+The script detects existing statusline configs (ccstatusline, claude-hud, prior claude-coach, custom scripts) and acts accordingly. Report the JSON output to the user. If `success: false`, share the action message — it contains manual integration instructions.
 
 ## 5. Advisor (optional)
 

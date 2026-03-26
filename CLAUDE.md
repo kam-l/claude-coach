@@ -13,7 +13,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, prompt enr
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency)
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing, `💭` = pending reflections
-- `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — scripts run from plugin cache
+- `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — `--wire` detects existing statusline (ccstatusline, claude-hud, custom) and wires coach integration
 - Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
 - Mutable data (cache, logs, setup-context, pending-reflections) lives under `${CLAUDE_PLUGIN_DATA}`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (minutes, default 5), `CLAUDE_COACH_COSTS` (show cost in statusline)

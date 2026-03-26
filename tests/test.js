@@ -294,6 +294,53 @@ try {
 
 fs.rmSync(tmpDataDir, { recursive: true, force: true });
 
+// ─── Unit: install-statusline.js --wire detection ────────────────
+
+describe("install-statusline.js --wire detection");
+
+function wireTest(statusLine, label, expectedDetected) {
+  const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-wire-"));
+  const tmpData = path.join(tmpHome, "data");
+  fs.mkdirSync(path.join(tmpHome, ".claude"), { recursive: true });
+  fs.mkdirSync(tmpData, { recursive: true });
+
+  const settings = statusLine ? { statusLine } : {};
+  fs.writeFileSync(path.join(tmpHome, ".claude", "settings.json"), JSON.stringify(settings));
+
+  try {
+    const result = execSync(
+      `"${process.execPath}" "${path.join(ROOT, "scripts", "install-statusline.js")}" --wire`,
+      {
+        encoding: "utf-8",
+        timeout: 5000,
+        env: {
+          ...process.env,
+          CLAUDE_PLUGIN_ROOT: ROOT,
+          CLAUDE_PLUGIN_DATA: tmpData,
+          CLAUDE_PROJECT_ROOT: path.join(tmpHome, "fake-project"),
+          HOME: tmpHome,
+          USERPROFILE: tmpHome,
+        },
+      }
+    );
+    // Extract JSON from output (skip the "runtime dir ready" line)
+    const jsonStart = result.indexOf("{");
+    assert(jsonStart !== -1, `${label}: produces JSON output`);
+    const parsed = JSON.parse(result.slice(jsonStart));
+    assert(parsed.detected === expectedDetected, `${label}: detected=${parsed.detected} (expected ${expectedDetected})`);
+  } catch (e) {
+    assert(false, `${label} failed: ${(e.message || "").slice(0, 200)}`);
+  }
+
+  fs.rmSync(tmpHome, { recursive: true, force: true });
+}
+
+wireTest(null, "virgin setup", "none");
+wireTest({ type: "command", command: "npx -y ccstatusline@latest" }, "ccstatusline", "ccstatusline");
+wireTest({ type: "command", command: "node ~/.claude/plugins/claude-hud/dist/index.js" }, "claude-hud", "claude-hud");
+wireTest({ type: "command", command: "node /old/path/statusline-tips.js" }, "prior coach", "coach");
+wireTest({ type: "command", command: "node /some/random/script.js" }, "unknown custom", "custom");
+
 // ─── Integration: session-advisor library mode ───────────────────
 
 describe("session-advisor library mode");
