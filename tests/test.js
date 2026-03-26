@@ -46,10 +46,12 @@ assert(!packageJson.files, "no files array (npm path removed)");
 
 describe("commands");
 
-assert(fs.existsSync(path.join(ROOT, "commands", "verify.md")), "commands/verify.md exists");
-assert(!fs.existsSync(path.join(ROOT, "commands", "init.md")), "commands/init.md removed (moved to setup skill)");
-assert(!fs.existsSync(path.join(ROOT, "commands", "tips.md")), "commands/tips.md removed (moved to setup skill)");
-assert(!fs.existsSync(path.join(ROOT, "commands", "uninstall.md")), "commands/uninstall.md removed (moved to setup skill)");
+assert(fs.existsSync(path.join(ROOT, "commands", "reflect.md")), "commands/reflect.md exists");
+assert(!fs.existsSync(path.join(ROOT, "commands", "verify.md")), "commands/verify.md removed (moved to global)");
+assert(!fs.existsSync(path.join(ROOT, "commands", "challenge.md")), "commands/challenge.md removed (moved to global)");
+assert(!fs.existsSync(path.join(ROOT, "commands", "refine.md")), "commands/refine.md removed (moved to global)");
+assert(!fs.existsSync(path.join(ROOT, "commands", "think.md")), "commands/think.md removed (moved to global)");
+assert(!fs.existsSync(path.join(ROOT, "agents")), "agents/ removed (moved to global)");
 
 assert(fs.existsSync(path.join(ROOT, "skills", "setup", "SKILL.md")), "skills/setup/SKILL.md exists");
 assert(fs.existsSync(path.join(ROOT, "skills", "setup", "workflows", "install.md")), "setup workflow: install");

@@ -3,8 +3,8 @@
 /**
  * UserPromptSubmit hook — frustration detection (local regex, zero latency).
  *
- * When frustration is detected, injects additionalContext routing Claude
- * to /verify (adversarial self-review) instead of doubling down.
+ * When frustration is detected, injects additionalContext coaching Claude
+ * to pause, diagnose root cause, and course-correct instead of doubling down.
  *
  * No external API calls. No dependencies beyond Node.js.
  */
@@ -15,9 +15,14 @@ const path = require("path");
 const DATA_DIR = process.env.CLAUDE_PLUGIN_DATA;
 const LOG_PATH = DATA_DIR ? path.join(DATA_DIR, "enrichment-log.jsonl") : null;
 
-const DIRECTIVE = `<required_action>
-The user's prompt signals frustration, confusion, or disagreement with prior actions. You MUST use the Skill tool to invoke /claude-coach:verify with the current discussion subject as the argument. Do not continue the previous approach — stop and verify your assumptions first.
-</required_action>`;
+const DIRECTIVE = `<coaching>
+The user is frustrated — your previous approach failed. Do not continue it. Redo from scratch:
+1. State what went wrong in one sentence. No apology, no filler.
+2. Re-read the relevant code and constraints. Your prior mental model was incorrect — rebuild it.
+3. Design a simpler approach. Fewer moving parts, clearer responsibilities. The first pass taught you the problem — now solve it properly.
+4. Implement the new approach. It should be shorter and simpler than what you tried before.
+Do not retry the same strategy. Do not ask clarifying questions — the user already told you what's wrong.
+</coaching>`;
 
 // --- Frustration detection (local regex, zero latency) ---
 
