@@ -115,6 +115,17 @@ Based on [taches-cc-resources/commands/consider](https://github.com/glittercowbo
 
 Or run `/claude-coach:setup install` for guided setup — it wires all of this automatically.
 
+### Statusline compatibility
+
+`/setup install` detects your existing statusline and adapts:
+
+| Your statusline | What happens |
+|-----------------|-------------|
+| None | Registers `statusline-tips.js` (tips + 💭 pending reflections) |
+| [ccstatusline](https://github.com/sirmalloc/ccstatusline), [claude-hud](https://github.com/jarrodwatts/claude-hud), or other tool | Generates `statusline-aggregator.js` — wraps original command, appends coach output |
+| Custom script already integrating coach | Detects existing integration, no changes |
+| Prior claude-coach version | Updates path to current version |
+
 ## Tip Categories
 
 | Category | # | Examples |

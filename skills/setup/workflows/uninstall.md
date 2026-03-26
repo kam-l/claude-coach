@@ -21,31 +21,9 @@ Check `statusLine` in `~/.claude/settings.json` -> `.claude/settings.json` -> `.
 
 - **Read the target script first** -- check if it has logic beyond claude-coach
 - Coach-only script (e.g. `statusline-tips.js`): remove the `statusLine` key
+- Aggregator wrapper (`statusline-aggregator.js`): read the wrapper to find the `Original:` comment, restore the original command as `statusLine`, then delete the aggregator file
 - Mixed script: remove only coach lines, leave rest. `AskUserQuestion` with diff before editing.
 - **NEVER delete statusLine without reading the target script first**
-
-Also clean up ccstatusline integration if present:
-```bash
-node -e "
-const fs = require('fs'), path = require('path'), home = require('os').homedir();
-const configPath = path.join(home, '.config', 'ccstatusline', 'settings.json');
-try {
-  const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  let changed = false;
-  if (config.lines) {
-    for (const line of config.lines) {
-      if (Array.isArray(line.items)) {
-        const before = line.items.length;
-        line.items = line.items.filter(i => !JSON.stringify(i).includes('claude-coach'));
-        if (line.items.length < before) changed = true;
-      }
-    }
-  }
-  if (changed) { fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n'); console.log('removed claude-coach widget from ccstatusline config'); }
-  else console.log('no claude-coach widget in ccstatusline config');
-} catch { console.log('no ccstatusline config found'); }
-"
-```
 
 ## 3. Remove runtime
 

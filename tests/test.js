@@ -336,10 +336,71 @@ function wireTest(statusLine, label, expectedDetected) {
 }
 
 wireTest(null, "virgin setup", "none");
-wireTest({ type: "command", command: "npx -y ccstatusline@latest" }, "ccstatusline", "ccstatusline");
-wireTest({ type: "command", command: "node ~/.claude/plugins/claude-hud/dist/index.js" }, "claude-hud", "claude-hud");
+wireTest({ type: "command", command: "npx -y ccstatusline@latest" }, "ccstatusline", "third-party");
+wireTest({ type: "command", command: "node ~/.claude/plugins/claude-hud/dist/index.js" }, "claude-hud", "third-party");
 wireTest({ type: "command", command: "node /old/path/statusline-tips.js" }, "prior coach", "coach");
 wireTest({ type: "command", command: "node /some/random/script.js" }, "unknown custom", "custom");
+
+// Verify wrapper generates an aggregator file for third-party
+{
+  const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-wire-"));
+  const tmpData = path.join(tmpHome, "data");
+  fs.mkdirSync(path.join(tmpHome, ".claude"), { recursive: true });
+  fs.mkdirSync(tmpData, { recursive: true });
+  fs.writeFileSync(
+    path.join(tmpHome, ".claude", "settings.json"),
+    JSON.stringify({ statusLine: { type: "command", command: "npx -y ccstatusline@latest" } })
+  );
+  try {
+    execSync(
+      `"${process.execPath}" "${path.join(ROOT, "scripts", "install-statusline.js")}" --wire`,
+      {
+        encoding: "utf-8",
+        timeout: 5000,
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, CLAUDE_PLUGIN_DATA: tmpData, CLAUDE_PROJECT_ROOT: path.join(tmpHome, "fake"), HOME: tmpHome, USERPROFILE: tmpHome },
+      }
+    );
+    assert(fs.existsSync(path.join(tmpData, "statusline-aggregator.js")), "third-party: generates aggregator file");
+    const agg = fs.readFileSync(path.join(tmpData, "statusline-aggregator.js"), "utf-8");
+    assert(agg.includes("ccstatusline"), "aggregator: preserves original command");
+    assert(agg.includes("getSessionAdvice"), "aggregator: includes coach integration");
+    const settings = JSON.parse(fs.readFileSync(path.join(tmpHome, ".claude", "settings.json"), "utf-8"));
+    assert(settings.statusLine.command.includes("statusline-aggregator"), "aggregator: settings updated to point to aggregator");
+  } catch (e) {
+    assert(false, `aggregator test failed: ${(e.message || "").slice(0, 200)}`);
+  }
+  fs.rmSync(tmpHome, { recursive: true, force: true });
+}
+
+// Verify re-run detects existing wrapper
+{
+  const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), "claude-coach-wire-"));
+  const tmpData = path.join(tmpHome, "data");
+  fs.mkdirSync(path.join(tmpHome, ".claude"), { recursive: true });
+  fs.mkdirSync(tmpData, { recursive: true });
+  const aggPath = path.join(tmpData, "statusline-aggregator.js").replace(/\\/g, "/");
+  fs.writeFileSync(
+    path.join(tmpHome, ".claude", "settings.json"),
+    JSON.stringify({ statusLine: { type: "command", command: `node "${aggPath}"` } })
+  );
+  fs.writeFileSync(path.join(tmpData, "statusline-aggregator.js"), "// placeholder\n * Original: npx ccstatusline\n");
+  try {
+    const result = execSync(
+      `"${process.execPath}" "${path.join(ROOT, "scripts", "install-statusline.js")}" --wire`,
+      {
+        encoding: "utf-8",
+        timeout: 5000,
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, CLAUDE_PLUGIN_DATA: tmpData, CLAUDE_PROJECT_ROOT: path.join(tmpHome, "fake"), HOME: tmpHome, USERPROFILE: tmpHome },
+      }
+    );
+    const jsonStart = result.indexOf("{");
+    const parsed = JSON.parse(result.slice(jsonStart));
+    assert(parsed.detected === "wrapped", "re-run: detects existing wrapper");
+  } catch (e) {
+    assert(false, `re-run test failed: ${(e.message || "").slice(0, 200)}`);
+  }
+  fs.rmSync(tmpHome, { recursive: true, force: true });
+}
 
 // ─── Integration: session-advisor library mode ───────────────────
 
