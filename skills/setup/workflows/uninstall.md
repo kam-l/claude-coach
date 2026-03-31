@@ -57,7 +57,6 @@ If fails, remove manually: delete `~/.claude/plugins/cache/claude-coach/` and `~
 
 ## 7. Verify
 
-Spawn `adversary` (foreground):
-> Verify claude-coach fully removed from `~/.claude/`. Check: settings.json (no spinnerTipsOverride, spinnerTipsEnabled, statusLine referencing coach, CLAUDE_COACH env vars, hooks referencing coach), no plugin cache dirs, no runtime dirs, no legacy statusline. Report traces as CRITICAL. Output `Result: PASS` if clean.
+Verify claude-coach fully removed from `~/.claude/`. Check: settings.json (no spinnerTipsOverride, spinnerTipsEnabled, statusLine referencing coach, CLAUDE_COACH env vars, hooks referencing coach), no plugin cache dirs, no runtime dirs, no legacy statusline.
 
-Fix traces and re-run until PASS. **Restart Claude Code** to complete removal.
+Report any remaining traces. **Restart Claude Code** to complete removal.

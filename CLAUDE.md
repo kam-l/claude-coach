@@ -13,12 +13,13 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, frustratio
 - `prompt-enrichment.js` is frustration-only (local regex, no API calls, zero latency) — injects inline coaching, does NOT route to external commands
 - Advisor NEVER suggests `/compact` or `/clear` for context management — `/clear` is fine for topic changes or repeated-correction recovery
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing, `💭` = pending reflections
+- Statusline tip priority: ⚠️ inject-strength advice > 💭 pending reflections (always first if >0) > ℹ️ display-strength advice > 💡 random tip
 - `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — `--wire` detects existing statusline and generates a universal aggregator wrapper (forks stdin to original command, appends coach output) at `${CLAUDE_PLUGIN_DATA}/statusline-aggregator.js`
 - Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
 - Mutable data (cache, logs, setup-context, pending-reflections) lives under `${CLAUDE_PLUGIN_DATA}`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (minutes, default 5), `CLAUDE_COACH_COSTS` (show cost in statusline)
 - Env vars: `CLAUDE_COACH_DEBUG` (enable debug logging to `${CLAUDE_PLUGIN_DATA}/reflect-debug.log`)
-- No adversarial agents or verification commands — those live at global scope (`~/.claude/agents/`, `~/.claude/commands/`)
+- Plugin is self-reliant — no dependencies on global-scope agents or commands
 
 ## Reflection Pipeline
 

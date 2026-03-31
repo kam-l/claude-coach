@@ -425,6 +425,27 @@ assert(advice.includes("\x1b["), "includes ANSI color codes");
 const advice2 = getSessionAdvice({ sessionId: "test-123", cwd: ROOT });
 assert(typeof advice2 === "string", "returns string with sessionId");
 
+// Pending reflections priority: should show 💭 over random tip when reflections exist
+{
+  const slug = ROOT.replace(/[:\\/]/g, "-");
+  const projDir = path.join(os.homedir(), ".claude", "projects", slug);
+  const pendingFile = path.join(projDir, "pending-reflections.jsonl");
+  const hadFile = fs.existsSync(pendingFile);
+  let originalContent = "";
+  try { originalContent = fs.readFileSync(pendingFile, "utf-8"); } catch {}
+  try {
+    fs.mkdirSync(projDir, { recursive: true });
+    fs.writeFileSync(pendingFile, '{"test":true}\n{"test":true}\n');
+    const adviceP = getSessionAdvice({ cwd: ROOT });
+    assert(adviceP.includes("💭"), "pending reflections shown when >0");
+    assert(adviceP.includes("2 pending"), "shows correct pending count");
+  } finally {
+    // Restore original state
+    if (hadFile) fs.writeFileSync(pendingFile, originalContent);
+    else try { fs.unlinkSync(pendingFile); } catch {}
+  }
+}
+
 fs.rmSync(tmpAdvisorData, { recursive: true, force: true });
 
 // ─── Report ──────────────────────────────────────────────────────

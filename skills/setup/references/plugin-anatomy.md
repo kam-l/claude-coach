@@ -6,8 +6,8 @@ Decision-tree reference for setup workflows. Load specific sections, not the who
 
 | Script | Mode | Purpose |
 |--------|------|---------|
-| `session-advisor.js` | Library + worker | Library: `getSessionAdvice()` for statusline. Worker: `claude -p --model sonnet` transcript analysis. |
-| `prompt-enrichment.js` | Hook (5s timeout) | Frustration detection (local regex, no API) — routes to /verify on user frustration. |
+| `session-advisor.js` | Library + worker | Library: `getSessionAdvice()` for statusline (priority: ⚠️ inject > 💭 pending reflections > ℹ️ display > 💡 random tip). Worker: `claude -p --model sonnet` transcript analysis. |
+| `prompt-enrichment.js` | Hook (2s timeout) | Frustration detection (local regex, no API) — injects coaching directive on user frustration. |
 | `coach-inject.js` | Hook (2s timeout) | Injects advisor recommendations as `additionalContext` on UserPromptSubmit. |
 | `install-statusline.js` | CLI (setup) | Creates runtime dir, writes version marker, cleans stale copies. |
 | `mine-setup.js` | CLI (setup) | Scans commands/skills/hooks, calls Sonnet to produce `setup-context.md`. |
@@ -23,7 +23,7 @@ Registered in `hooks/hooks.json`:
 
 **UserPromptSubmit:**
 1. `coach-inject.js` (2s timeout) — injects advisor context
-2. `prompt-enrichment.js` (5s timeout) — classifies and enriches prompts
+2. `prompt-enrichment.js` (2s timeout) — frustration detection, injects coaching directive
 
 **PostToolUseFailure:**
 3. `error-logger.js` (2s timeout) — logs tool failures, injects coaching on repeated failures
@@ -48,8 +48,6 @@ All fail-open (exit 0 on error). UserPromptSubmit hooks skip subagents (`agent_i
 
 | Var | Source | Purpose |
 |-----|--------|---------|
-| `GROQ_API_KEY` | System env | Prompt enrichment (free tier) |
-| `ANTHROPIC_API_KEY` | System env | Prompt enrichment fallback (Haiku) |
 | `CLAUDE_COACH` | Settings env | Enable advisor |
 | `CLAUDE_COACH_INTERVAL` | Settings env | Advisor cycle interval |
 | `CLAUDE_COACH_COSTS` | Settings env | Show costs in statusline |
@@ -72,13 +70,12 @@ Legacy locations (cleaned during install): `~/.claude/.coach/`, `~/.claude/statu
 
 | Path | Purpose |
 |------|---------|
-| `tips.json` | 112 tips, 6 categories. Shape: `{ version, categories: { [name]: string[] } }` |
+| `tips.json` | 133 tips, 6 categories. Shape: `{ version, categories: { [name]: string[] } }` |
 | `references/claude-usage.md` | Advisor knowledge base |
 
-## Agents
+## Statusline Priority
 
-| Agent | Role |
-|-------|------|
-| `adversary` | Universal stress-tester (used by /verify, uninstall) |
-| `attacker` | Antithesis advocate (used by /verify -> /think) |
-| `defender` | Thesis advocate (used by /verify -> /think) |
+1. **⚠️ inject** — urgent advisor advice (session-specific, actionable now)
+2. **💭 pending reflections** — always shown if >0, first tip on new session
+3. **ℹ️ display** — advisor advice worth showing, not urgent
+4. **💡 random tip** — curated tip from pool, rotates every 30s
