@@ -41,40 +41,27 @@ No API keys required. The Sonnet advisor uses the `claude` CLI directly (your ex
 # Restart Claude Code after install/refresh/uninstall
 ```
 
-## Architecture
-
-```
-                              Claude Code Session
-                                      |
-                    +-----------------+-----------------+
-                    |                 |                 |
-             UserPromptSubmit    Tool Calls        SessionEnd
-                    |                 |                 |
-            +-------+-------+        |          reflect-hook.js
-            |               |        |           (detached)
-     coach-inject.js  prompt-        |                 |
-     (advisor ⚠️    enrichment.js   statusline     reflect-pipeline.js
-      injection)   (frustration     tips.json        (Sonnet)
-            |       coaching)      133 tips              |
-            |          |             |           pending-reflections.jsonl
-       session-    inline         💡 rotate           (per-project)
-       advisor.js  coaching       on calls               |
-       (Sonnet)    directive                         /reflect
-            |                                    (human review)
-       ℹ️ display                                     |
-       ⚠️ inject                            +--------+--------+--------+
-                                            |        |        |        |
-                                         memories   tips   CLAUDE.md  skill
-                                                           patches   patches
-```
+## Features
 
 **Data flow:**
 1. **Tips** (always on) — 133 curated tips rotate in the statusline during tool calls. Zero cost, passive reinforcement.
-2. **Advisor** (opt-in) — Sonnet reads the transcript every N minutes, produces contextual coaching. Strong advice is injected directly into Claude's context via `additionalContext`.
-3. **Frustration coaching** (always on) — local regex detects expletives, blame, "still broken". Injects a coaching directive that makes Claude pause, name the mistake, and state a corrected approach. Zero latency, no API calls.
-4. **Reflection** (automatic) — after each session, a detached Sonnet call extracts corrections, confirmations, and feedback patterns. Results are routed to the right target and queued — never auto-applied.
+2. **Advisor** (opt-in) — Sonnet reads the transcript every N minutes, produces contextual tips (ℹ️). Strong advice (⚠️) is injected directly into Claude's context via `additionalContext` on your next prompt.
+3. **Reflection** (automatic) — after each session, a detached Sonnet call extracts corrections, confirmations, and feedback patterns. Results are routed to the right target and queued — never auto-applied. Review and redistribute them using `/reflect` command.
+4. **Frustration coaching** (always on) — local regex detects expletives, blame, "still broken". Injects a coaching directive that makes Claude pause, name the mistake, and state a corrected approach. Zero latency, no API calls.
 
 ## How It Works
+
+### Sonnet Advisor (opt-in)
+
+A detached Sonnet worker reads your session transcript and produces 1-3 tips grounded in what you're actually doing:
+
+```
+ℹ️ Run tests before committing the auth middleware changes
+ℹ️ Use /fix — methodical debugging beats trial and error here
+⚠️ The retry logic in api.js needs a backoff — ask Claude to add one
+```
+
+When the advisor has *strong* advice (⚠️), it's injected directly into Claude's context via `additionalContext`. Claude acts on the coaching without you having to relay it.
 
 ### Session Reflection
 
@@ -97,18 +84,6 @@ Each learning is routed to the right target:
 ```
 
 Run `/reflect` to review, accept, or discard — human-in-the-loop, never auto-applied.
-
-### Sonnet Advisor (opt-in)
-
-A detached Sonnet worker reads your session transcript and produces 1-3 tips grounded in what you're actually doing:
-
-```
-ℹ️ Run tests before committing the auth middleware changes
-ℹ️ Use /fix — methodical debugging beats trial and error here
-⚠️ The retry logic in api.js needs a backoff — ask Claude to add one
-```
-
-When the advisor has *strong* advice (⚠️), it's injected directly into Claude's context via `additionalContext`. Claude acts on the coaching without you having to relay it.
 
 ### Frustration Coaching
 
@@ -138,7 +113,7 @@ No apology walls. No repeating the failed approach. No unnecessary clarification
 |----------|---------|-------------|
 | `CLAUDE_COACH` | `0` | Enable Sonnet advisor + hook injection |
 | `CLAUDE_COACH_INTERVAL` | `5` | Minutes between advisor calls |
-| `CLAUDE_COACH_COSTS` | `0` | Show advisor cost in statusline (`[$0.05]`) |
+| `CLAUDE_COACH_COSTS` | `0` | Enable advisor cost in statusline (`[$0.05]`) |
 
 **Advisor cost:** ≤$0.05/call (hard-capped via `--max-budget-usd`). Pro/Max users spend rate-limit budget, not dollars.
 

@@ -93,15 +93,21 @@ function isLockStale(lockFile) {
 // ─── Library mode ────────────────────────────────────────────────
 
 function getSessionAdvice({ sessionId, cwd } = {}) {
-  // Gate: advisor disabled → fallback
+  // Pending reflections take priority (second only to inject-strength advice)
+  const pending = pendingReflectionCount(cwd);
+  const pendingLine = pending > 0
+    ? `\n${FG}💭 ${pending} pending reflection${pending > 1 ? "s" : ""} — /reflect to review${RST}`
+    : null;
+
+  // Gate: advisor disabled → pending reflections or fallback tip
   const envVal = process.env.CLAUDE_COACH;
   if (!envVal || envVal === "0") {
-    return fallbackTip(false, cwd);
+    return pendingLine || fallbackTip(false, cwd);
   }
 
-  // No session ID → fallback
+  // No session ID → pending reflections or fallback tip
   if (!sessionId) {
-    return fallbackTip(false, cwd);
+    return pendingLine || fallbackTip(false, cwd);
   }
 
   // Try reading cache
@@ -109,6 +115,11 @@ function getSessionAdvice({ sessionId, cwd } = {}) {
   if (cache) {
     const age = Date.now() - cache.timestamp;
     if (age < intervalSeconds() * 1000 && cache.tips && cache.tips.length > 0) {
+      // Inject-strength advice takes top priority
+      // Pending reflections take second priority over display-strength advice
+      if (cache.strength !== "inject" && pendingLine) {
+        return pendingLine;
+      }
       const idx = stableIndex(cache.tips, 30);
       const prefix = cache.strength === "inject" ? "⚠️" : "ℹ️";
       const tip = cache.tips[idx].replace(/^💡/, prefix);

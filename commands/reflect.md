@@ -4,6 +4,7 @@ description: >
   pending reflections, session learnings, what did I learn, audit reflections,
   apply reflections, accept pending memories, what should I remember.
 argument-hint: "[accept-all]"
+allowed-tools: AskUserQuestion, Read, Write, Edit, Grep, Glob
 ---
 
 Review pending session reflections — proposed memories, tips, CLAUDE.md patches, and skill patches extracted from past sessions.
@@ -18,23 +19,17 @@ Review pending session reflections — proposed memories, tips, CLAUDE.md patche
 2. For each pending reflection, parse the JSON and **print as regular text output** (not inside AskUserQuestion):
    - Session timestamp and working directory
    - Extracted signals as a numbered list with tier label (correction / approval / observation)
-   - Each proposed item grouped by type:
-     - **Memories**: name, type, and full content
-     - **Tips**: the tip text verbatim
-     - **CLAUDE.md patches**: target section and content to add
-     - **Skill patches**: target skill, section, and content to add
+   - Each proposed item as a labeled line: `[type] name — description`
 
 3. If `$ARGUMENTS` is "accept-all", apply all reflections without prompting (batch mode).
 
-4. Otherwise, AFTER printing the content, use `AskUserQuestion` with a SHORT action-only prompt:
-   - Question: "Action for this reflection?" (keep it short — all detail was already printed above)
-   - **Accept all** — apply all proposed items from this reflection
-   - **Cherry-pick** — show each item individually for accept/reject
-   - **Skip** — discard this reflection entirely
-
-   For cherry-pick mode, loop through each item with a separate AskUserQuestion:
-   - Question: "Accept {name/description}?"
-   - **Accept** / **Edit** / **Skip**
+4. Otherwise, use **one `AskUserQuestion` call** batching up to 4 reflections:
+   - One **multi-select** question per reflection (max 4 questions per call)
+   - Question: "Session {date} — select items to accept:", header: date string (e.g. `"Mar 31"`)
+   - Each proposed item is an option: label=`[type] name`, description=content summary
+   - User selects which items to accept; unselected items are skipped
+   - No separate cherry-pick flow — the multi-select IS the cherry-pick
+   - If >4 reflections pending, process in sequential batches of 4
 
 5. For accepted memories:
    - Derive project slug from the reflection's `cwd` field: strip trailing slashes, replace `:`, `\`, `/` with `-` (e.g., `C:\Projects\foo` → `C--Projects-foo`)

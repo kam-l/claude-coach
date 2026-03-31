@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-coach",
-  "description": "Prompt enrichment, adversarial stress-testing, and 112 curated tips for Claude Code.",
+  "description": "Session coaching, frustration detection, and 133 curated tips for Claude Code.",
   "owner": {
     "name": "kam-l"
   },
   "plugins": [
     {
       "name": "claude-coach",
-      "description": "Prompt enrichment, adversarial stress-testing, and 112 curated tips for Claude Code",
+      "description": "Session coaching, frustration detection, and 133 curated tips for Claude Code",
       "source": "./",
       "category": "productivity"
     }
