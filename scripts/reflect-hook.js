@@ -51,7 +51,7 @@ try {
     if (fs.existsSync(LOCK_FILE)) {
       const lockContent = fs.readFileSync(LOCK_FILE, "utf-8");
       const lockTs = parseInt(lockContent.split("\n")[1], 10);
-      if (Date.now() - lockTs < 120000) { log("exit: lock active"); process.exit(0); }
+      if (Date.now() - lockTs < 300000) { log("exit: lock active"); process.exit(0); }
     }
   } catch {}
 

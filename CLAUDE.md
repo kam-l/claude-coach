@@ -15,7 +15,7 @@ Session-aware coaching — curated spinner tips, live Sonnet advisor, frustratio
 - Statusline prefix: `💡` = random tip, `ℹ️` = advisor display, `⚠️` = advisor inject, `🔍` = analyzing, `💭` = pending reflections
 - Statusline tip priority: ⚠️ inject-strength advice > 💭 pending reflections (always first if >0) > ℹ️ display-strength advice > 💡 random tip
 - `install-statusline.js` ensures mutable runtime dir exists, cleans stale copies — `--wire` detects existing statusline and generates a universal aggregator wrapper (forks stdin to original command, appends coach output) at `${CLAUDE_PLUGIN_DATA}/statusline-aggregator.js`
-- Data files (tips.json, claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
+- Data files (tips.json, references/claude-usage.md) are read from the bundle (`__dirname`) — never copied to runtime
 - Mutable data (cache, logs, setup-context, pending-reflections) lives under `${CLAUDE_PLUGIN_DATA}`
 - Env vars: `CLAUDE_COACH` (enable advisor), `CLAUDE_COACH_INTERVAL` (minutes, default 5), `CLAUDE_COACH_COSTS` (show cost in statusline)
 - Env vars: `CLAUDE_COACH_DEBUG` (enable debug logging to `${CLAUDE_PLUGIN_DATA}/reflect-debug.log`)
