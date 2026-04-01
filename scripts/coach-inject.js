@@ -12,7 +12,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const CACHE_DIR = path.join(process.env.CLAUDE_PLUGIN_DATA, "cache");
+const DATA_DIR = process.env.CLAUDE_PLUGIN_DATA;
+if (!DATA_DIR) process.exit(0);
+const CACHE_DIR = path.join(DATA_DIR, "cache");
 
 try {
   const input = fs.readFileSync(0, "utf-8");

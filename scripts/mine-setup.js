@@ -18,6 +18,7 @@ const { safeJSON, extractFrontmatter, findFiles } = require("./helpers");
 const home = os.homedir();
 const claudeHome = path.join(home, ".claude");
 const projectDir = process.env.CLAUDE_PROJECT_ROOT || process.cwd();
+if (!process.env.CLAUDE_PLUGIN_DATA) process.exit(0);
 const dest = path.join(process.env.CLAUDE_PLUGIN_DATA, "setup-context.md");
 
 // --- Helpers (script-specific) ---

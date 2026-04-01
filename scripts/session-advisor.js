@@ -219,7 +219,7 @@ function runWorker(sessionId, cwd) {
     }
 
     // Derive JSONL path
-    const slug = cwd.replace(/[:\\/]/g, "-");
+    const slug = (cwd || "global").replace(/[/\\]+$/, "").replace(/[:\\/]/g, "-");
     const jsonlPath = path.join(HOME, ".claude", "projects", slug, sessionId + ".jsonl");
     if (!fs.existsSync(jsonlPath)) {
       return; // no transcript yet — exit gracefully
